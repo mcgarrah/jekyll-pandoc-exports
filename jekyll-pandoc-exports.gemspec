@@ -11,9 +11,10 @@ Gem::Specification.new do |spec|
   spec.homepage      = "https://github.com/mcgarrah/jekyll-pandoc-exports"
   spec.license       = "MIT"
 
-  # Set Read the Docs as primary documentation
+  # Set Read the Docs as primary documentation with RubyDoc.info as API reference
   spec.metadata = {
     "documentation_uri" => "https://jekyll-pandoc-exports.readthedocs.io",
+    "api_documentation_uri" => "https://www.rubydoc.info/gems/jekyll-pandoc-exports",
     "homepage_uri"      => "https://github.com/mcgarrah/jekyll-pandoc-exports",
     "source_code_uri"   => "https://github.com/mcgarrah/jekyll-pandoc-exports",
     "changelog_uri"     => "https://github.com/mcgarrah/jekyll-pandoc-exports/blob/main/CHANGELOG.md",

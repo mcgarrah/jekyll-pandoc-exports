@@ -62,12 +62,15 @@ open https://github.com/mcgarrah/jekyll-pandoc-exports/actions
 
 ```bash
 # Check GitHub Release
+# Visit: https://github.com/mcgarrah/jekyll-pandoc-exports/releases/
 open https://github.com/mcgarrah/jekyll-pandoc-exports/releases/tag/v0.15.1
 
 # Check RubyGems publication
+# Visit: https://rubygems.org/gems/jekyll-pandoc-exports
 open https://rubygems.org/gems/jekyll-pandoc-exports
 
 # Check Read the Docs site
+# Visit: https://jekyll-pandoc-exports.readthedocs.io
 open https://jekyll-pandoc-exports.readthedocs.io
 
 # Test gem installation

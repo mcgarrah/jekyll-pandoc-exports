@@ -7,16 +7,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.8] - 2025-09-15
+
+### Added
+- Complete release automation with GitHub CLI integration
+- Enhanced bin/release script with full workflow automation
+- New bin/reset-dev script for post-release dev branch preparation
+- Comprehensive RELEASE_WORKFLOW.md documentation
+- Automated PR creation, merge, and tag push functionality
+- Intelligent changelog parsing for PR descriptions
+- Next version suggestions and dev branch reset automation
+- Verification URLs in script output and documentation
+
+### Fixed
+- CI workflow Ruby version compatibility issues
+- CI workflow frozen Gemfile.lock issue resolved
+- Restored bundler-cache for efficient CI builds
+- Missing bin/reset-dev script recreated with full functionality
+
+### Changed
+- Release process reduced from 10+ manual steps to 1 command
+- GitHub Actions workflows optimized with Ruby 3.0, 3.1, 3.2, 3.3 support
+- Updated Ruby requirement to 3.0+ for better dependency compatibility
+- Enhanced error handling and fallback procedures
+- Improved developer experience with automated workflows
+
 ## [0.1.7] - 2025-09-15
 
 ### Added
-- 
+- Initial release automation framework
 
 ### Changed
-- 
+- Version management improvements
 
 ### Fixed
-- 
+- Basic CI workflow issues
+
 ## [0.1.6] - 2025-09-15
 
 ## Fixed

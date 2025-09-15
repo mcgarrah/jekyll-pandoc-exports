@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    jekyll-pandoc-exports (0.1.6)
+    jekyll-pandoc-exports (0.1.7)
       jekyll (>= 3.0)
       pandoc-ruby (~> 2.1)
 

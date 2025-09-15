@@ -1,6 +1,8 @@
+require_relative "lib/jekyll-pandoc-exports/version"
+
 Gem::Specification.new do |spec|
   spec.name          = "jekyll-pandoc-exports"
-  spec.version       = "1.0.0"
+  spec.version       = Jekyll::PandocExports::VERSION
   spec.authors       = ["Michael McGarrah"]
   spec.email         = ["mcgarrah@gmail.com"]
 

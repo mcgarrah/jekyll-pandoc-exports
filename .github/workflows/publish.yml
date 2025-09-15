@@ -19,8 +19,5 @@ jobs:
           ruby-version: '3.0'
           bundler-cache: true
       
-      - name: Build gem
-        run: gem build jekyll-pandoc-exports.gemspec
-      
-      - name: Publish to RubyGems
+      - name: Build and publish gem
         uses: rubygems/release-gem@v1

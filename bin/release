@@ -37,6 +37,10 @@ class ReleaseManager
     # Update changelog
     update_changelog(new_version)
     
+    # Update Gemfile.lock with new version
+    puts "Updating Gemfile.lock with new version..."
+    system('bundle install')
+    
     # Run tests (unless skipped)
     unless skip_tests
       puts "Running tests..."
@@ -49,8 +53,8 @@ class ReleaseManager
       puts "Skipping tests as requested..."
     end
     
-    # Commit changes
-    system("git add #{@version_file} #{@changelog_path}")
+    # Commit changes (including updated Gemfile.lock)
+    system("git add #{@version_file} #{@changelog_path} Gemfile.lock")
     system("git commit -m 'Bump version to #{new_version}'")
     
     current_branch = `git branch --show-current`.strip

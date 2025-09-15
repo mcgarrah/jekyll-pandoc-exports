@@ -136,6 +136,50 @@ Add to your main CSS to hide download links when printing:
 }
 ```
 
+## Plugin Extensibility
+
+Extend functionality with custom hooks:
+
+```ruby
+# Register pre-conversion hook
+Jekyll::PandocExports::Hooks.register_pre_conversion do |html_content, config, context|
+  # Modify HTML before conversion
+  html_content.gsub('old-class', 'new-class')
+end
+
+# Register post-conversion hook
+Jekyll::PandocExports::Hooks.register_post_conversion do |content, format, config, context|
+  # Process converted content
+  if format == :pdf
+    # Custom PDF post-processing
+  end
+  content
+end
+```
+
+### Hook Context
+
+Hooks receive context information:
+- `format`: Output format (:docx or :pdf)
+- `filename`: Base filename being processed
+- `config`: Full plugin configuration
+
+## Performance Monitoring
+
+Enable detailed statistics and timing:
+
+```yaml
+pandoc_exports:
+  performance_monitoring: true
+  debug: true
+```
+
+Outputs conversion statistics:
+- Success/failure rates
+- Processing times per file
+- Format-specific metrics
+- Error summaries
+
 ## Generated Files
 
 The plugin generates files with the same name as your markdown file:
@@ -146,6 +190,37 @@ The plugin generates files with the same name as your markdown file:
 ## Download Links
 
 When `inject_downloads` is enabled, the plugin automatically adds download links to pages that generate exports. Links are inserted after the first heading or at the beginning of the body.
+
+## CLI Usage
+
+The plugin includes a command-line tool for standalone conversions:
+
+```bash
+# Convert single HTML file to both formats
+jekyll-pandoc-exports --file page.html
+
+# Convert to PDF only
+jekyll-pandoc-exports --file page.html --format pdf
+
+# Convert with custom output directory
+jekyll-pandoc-exports --file page.html --output /tmp/exports
+
+# Process entire Jekyll site
+jekyll-pandoc-exports --source . --destination _site
+
+# Enable debug output
+jekyll-pandoc-exports --file page.html --debug
+```
+
+### CLI Options
+
+- `-f, --file FILE`: Convert single HTML file
+- `--format FORMAT`: Output format (docx, pdf, both)
+- `-o, --output DIR`: Custom output directory
+- `-s, --source DIR`: Jekyll source directory
+- `-d, --destination DIR`: Jekyll destination directory
+- `--debug`: Enable verbose debug output
+- `-h, --help`: Show help message
 
 ## Publishing to RubyGems
 

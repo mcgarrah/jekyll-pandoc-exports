@@ -11,8 +11,9 @@ Gem::Specification.new do |spec|
   spec.homepage      = "https://github.com/mcgarrah/jekyll-pandoc-exports"
   spec.license       = "MIT"
 
-  spec.files         = Dir["lib/**/*", "README.md", "LICENSE", "CHANGELOG.md"]
+  spec.files         = Dir["lib/**/*", "bin/*", "README.md", "LICENSE", "CHANGELOG.md"]
   spec.require_paths = ["lib"]
+  spec.executables   = ["jekyll-pandoc-exports"]
 
   spec.required_ruby_version = ">= 2.6.0"
 

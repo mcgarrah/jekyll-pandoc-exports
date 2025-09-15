@@ -1,0 +1,131 @@
+#!/usr/bin/env ruby
+
+require 'optparse'
+require 'jekyll'
+require_relative '../lib/jekyll-pandoc-exports'
+
+class CLI
+  def initialize
+    @options = {
+      source: '.',
+      destination: '_site',
+      format: 'both',
+      output_dir: nil,
+      debug: false
+    }
+  end
+  
+  def run(args)
+    parse_options(args)
+    
+    if @options[:file]
+      convert_single_file
+    else
+      convert_site
+    end
+  end
+  
+  private
+  
+  def parse_options(args)
+    OptionParser.new do |opts|
+      opts.banner = "Usage: jekyll-pandoc-exports [options]"
+      
+      opts.on("-f", "--file FILE", "Convert single file") do |file|
+        @options[:file] = file
+      end
+      
+      opts.on("-s", "--source DIR", "Source directory (default: .)") do |dir|
+        @options[:source] = dir
+      end
+      
+      opts.on("-d", "--destination DIR", "Destination directory (default: _site)") do |dir|
+        @options[:destination] = dir
+      end
+      
+      opts.on("--format FORMAT", "Output format: docx, pdf, both (default: both)") do |format|
+        @options[:format] = format
+      end
+      
+      opts.on("-o", "--output DIR", "Output directory for exports") do |dir|
+        @options[:output_dir] = dir
+      end
+      
+      opts.on("--debug", "Enable debug output") do
+        @options[:debug] = true
+      end
+      
+      opts.on("-h", "--help", "Show this help") do
+        puts opts
+        exit
+      end
+    end.parse!(args)
+  end
+  
+  def convert_single_file
+    unless File.exist?(@options[:file])
+      puts "Error: File #{@options[:file]} not found"
+      exit 1
+    end
+    
+    html_content = File.read(@options[:file])
+    filename = File.basename(@options[:file], '.*')
+    output_dir = @options[:output_dir] || File.dirname(@options[:file])
+    
+    config = build_config
+    generated_files = []
+    
+    if ['docx', 'both'].include?(@options[:format])
+      Jekyll::PandocExports.generate_docx(html_content, filename, output_dir, mock_site, generated_files, config)
+    end
+    
+    if ['pdf', 'both'].include?(@options[:format])
+      page_data = { 'pdf_options' => config['pdf_options'] }
+      Jekyll::PandocExports.generate_pdf(html_content, filename, output_dir, mock_site, generated_files, mock_page(page_data), config)
+    end
+    
+    puts "Conversion complete. Generated #{generated_files.length} file(s)."
+  end
+  
+  def convert_site
+    site_config = {
+      'source' => @options[:source],
+      'destination' => @options[:destination],
+      'pandoc_exports' => build_config
+    }
+    
+    site = Jekyll::Site.new(Jekyll.configuration(site_config))
+    site.process
+    
+    puts "Site conversion complete."
+  end
+  
+  def build_config
+    config = {
+      'enabled' => true,
+      'debug' => @options[:debug],
+      'pdf_options' => { 'variable' => 'geometry:margin=1in' },
+      'unicode_cleanup' => true
+    }
+    
+    config['output_dir'] = @options[:output_dir] if @options[:output_dir]
+    config
+  end
+  
+  def mock_site
+    site = Object.new
+    def site.baseurl; ''; end
+    site
+  end
+  
+  def mock_page(data)
+    page = Object.new
+    def page.data; @data; end
+    page.instance_variable_set(:@data, data)
+    page
+  end
+end
+
+if __FILE__ == $0
+  CLI.new.run(ARGV)
+end

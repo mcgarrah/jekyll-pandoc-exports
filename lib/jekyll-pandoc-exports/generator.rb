@@ -1,4 +1,6 @@
 require 'pandoc-ruby'
+require_relative 'hooks'
+require_relative 'statistics'
 
 module Jekyll
   module PandocExports
@@ -12,7 +14,9 @@ module Jekyll
         return
       end
       
+      @stats = Statistics.new
       process_collections(site, config)
+      @stats.print_summary(config)
     end
     
     def self.setup_configuration(site)
@@ -123,7 +127,8 @@ module Jekyll
     end
     
     def self.process_page(site, page, config)
-      start_time = Time.now if config['performance_monitoring']
+      @stats&.record_processing_start
+      @stats&.record_file_processed
       
       html_file = get_html_file_path(site, page)
       return unless File.exist?(html_file)
@@ -141,10 +146,7 @@ module Jekyll
         inject_download_links(html_content, generated_files, html_file, config)
       end
       
-      if config['performance_monitoring']
-        duration = Time.now - start_time
-        log_message(config, "Processed #{filename} in #{duration.round(3)}s")
-      end
+      @stats&.record_processing_end
     end
     
     def self.get_html_file_path(site, page)
@@ -197,7 +199,13 @@ module Jekyll
       return unless validate_content_size(html_content, config)
       
       begin
-        docx_content = PandocRuby.convert(html_content, from: :html, to: :docx)
+        # Run pre-conversion hooks
+        processed_html = Hooks.run_pre_conversion_hooks(html_content, config, { format: :docx, filename: filename })
+        
+        docx_content = PandocRuby.convert(processed_html, from: :html, to: :docx)
+        
+        # Run post-conversion hooks
+        docx_content = Hooks.run_post_conversion_hooks(docx_content, :docx, config, { filename: filename })
         docx_file = File.join(output_dir, "#{filename}.docx")
         
         File.open(docx_file, 'wb') { |file| file.write(docx_content) }
@@ -206,8 +214,10 @@ module Jekyll
           type: 'Word Document (.docx)', 
           url: "#{site.baseurl}/#{filename}.docx" 
         }
+        @stats&.record_conversion_success(:docx)
         log_message(config, "Generated #{filename}.docx")
       rescue => e
+        @stats&.record_conversion_failure(:docx, e)
         log_error(config, "Failed to generate #{filename}.docx: #{e.message}")
       end
     end
@@ -216,7 +226,10 @@ module Jekyll
       return unless validate_content_size(html_content, config)
       
       begin
-        pdf_html = html_content.dup
+        # Run pre-conversion hooks
+        processed_html = Hooks.run_pre_conversion_hooks(html_content, config, { format: :pdf, filename: filename })
+        
+        pdf_html = processed_html.dup
         
         # Apply Unicode cleanup if enabled
         if config['unicode_cleanup']
@@ -234,6 +247,9 @@ module Jekyll
         # Merge custom pandoc options
         all_options = pdf_options.merge(config['pandoc_options'])
         pdf_content = PandocRuby.new(pdf_html, from: :html, to: :pdf).convert(all_options)
+        
+        # Run post-conversion hooks
+        pdf_content = Hooks.run_post_conversion_hooks(pdf_content, :pdf, config, { filename: filename })
         pdf_file = File.join(output_dir, "#{filename}.pdf")
         
         File.open(pdf_file, 'wb') { |file| file.write(pdf_content) }
@@ -242,8 +258,10 @@ module Jekyll
           type: 'PDF Document (.pdf)', 
           url: "#{site.baseurl}/#{filename}.pdf" 
         }
+        @stats&.record_conversion_success(:pdf)
         log_message(config, "Generated #{filename}.pdf")
       rescue => e
+        @stats&.record_conversion_failure(:pdf, e)
         log_error(config, "Failed to generate #{filename}.pdf: #{e.message}")
       end
     end

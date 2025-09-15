@@ -1,30 +1,16 @@
 require 'minitest/autorun'
+require 'jekyll'
 
-# Mock PandocRuby for testing without dependency
-module PandocRuby
-  def self.convert(content, options = {})
+# Load our plugin first
+require_relative '../lib/jekyll-pandoc-exports/generator'
+
+# Mock PandocRuby methods if needed
+if defined?(PandocRuby)
+  # Override existing methods for testing
+  PandocRuby.define_singleton_method(:convert) do |content, options = {}|
     "mock_#{options[:to]}_content"
   end
-  
-  def self.new(content, options = {})
-    MockPandoc.new(content, options)
-  end
-  
-  class MockPandoc
-    def initialize(content, options)
-      @content = content
-      @options = options
-    end
-    
-    def convert(extra_options = {})
-      "mock_converted_content"
-    end
-  end
 end
-
-# Load Jekyll and our plugin
-require 'jekyll'
-require_relative '../lib/jekyll-pandoc-exports/generator'
 
 class TestMockGenerator < Minitest::Test
   def test_setup_configuration_defaults
@@ -72,6 +58,7 @@ class TestMockGenerator < Minitest::Test
     html = '<img src="/assets/images/test.jpg">'
     site = mock_site
     config = {
+      'template' => { 'header' => '', 'footer' => '', 'css' => '' },
       'image_path_fixes' => [
         { 'pattern' => 'src="/assets/images/', 'replacement' => 'src="{{site.dest}}/assets/images/' }
       ]

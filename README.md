@@ -4,7 +4,10 @@ A Jekyll plugin that automatically generates DOCX and PDF exports of your pages 
 
 ## Features
 
-- Generate Word documents (.docx) and PDFs from Jekyll pages
+- Generate Word documents (.docx) and PDFs from Jekyll pages, posts, and collections
+- Configurable output directories for organized file management
+- Incremental builds (only regenerate changed files)
+- Automatic dependency validation (Pandoc/LaTeX)
 - Configurable PDF options (margins, paper size, etc.)
 - Automatic Unicode cleanup for LaTeX compatibility
 - Configurable HTML cleanup patterns
@@ -65,6 +68,9 @@ Add configuration to your `_config.yml`:
 ```yaml
 pandoc_exports:
   enabled: true
+  output_dir: 'downloads'           # Custom output directory (optional)
+  collections: ['pages', 'posts']   # Collections to process
+  incremental: true                 # Only regenerate changed files
   pdf_options:
     variable: 'geometry:margin=0.75in'
   unicode_cleanup: true
@@ -81,6 +87,9 @@ pandoc_exports:
 ### Configuration Options
 
 - `enabled`: Enable/disable the plugin (default: true)
+- `output_dir`: Custom output directory for exports (default: site root)
+- `collections`: Array of collections to process (default: ['pages', 'posts'])
+- `incremental`: Only regenerate files when source changes (default: false)
 - `pdf_options`: Pandoc options for PDF generation (default: 1in margins)
 - `unicode_cleanup`: Remove problematic Unicode characters for LaTeX (default: true)
 - `inject_downloads`: Auto-inject download links into pages (default: true)

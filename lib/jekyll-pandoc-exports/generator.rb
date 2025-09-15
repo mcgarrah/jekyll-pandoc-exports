@@ -7,16 +7,20 @@ module Jekyll
       config = setup_configuration(site)
       return unless config['enabled']
       
-      site.pages.each do |page|
-        next unless page.data['docx'] || page.data['pdf']
-        process_page(site, page, config)
+      unless validate_dependencies
+        Jekyll.logger.error "Pandoc Exports:", "Missing required dependencies. Please install Pandoc and LaTeX."
+        return
       end
+      
+      process_collections(site, config)
     end
     
     def self.setup_configuration(site)
       config = site.config['pandoc_exports'] || {}
       {
         'enabled' => true,
+        'output_dir' => '',
+        'collections' => ['pages', 'posts'],
         'pdf_options' => { 'variable' => 'geometry:margin=1in' },
         'unicode_cleanup' => true,
         'inject_downloads' => true,
@@ -27,17 +31,99 @@ module Jekyll
       }.merge(config)
     end
     
+    def self.validate_dependencies
+      pandoc_available = system('pandoc --version > /dev/null 2>&1')
+      latex_available = system('pdflatex --version > /dev/null 2>&1')
+      
+      unless pandoc_available
+        Jekyll.logger.warn "Pandoc Exports:", "Pandoc not found. Install with: brew install pandoc (macOS) or apt-get install pandoc (Ubuntu)"
+      end
+      
+      unless latex_available
+        Jekyll.logger.warn "Pandoc Exports:", "LaTeX not found. Install with: brew install --cask mactex (macOS) or apt-get install texlive-latex-base (Ubuntu)"
+      end
+      
+      pandoc_available
+    end
+    
+    def self.process_collections(site, config)
+      config['collections'].each do |collection_name|
+        case collection_name
+        when 'pages'
+          site.pages.each { |item| process_item(site, item, config) }
+        when 'posts'
+          site.posts.docs.each { |item| process_item(site, item, config) }
+        else
+          collection = site.collections[collection_name]
+          collection&.docs&.each { |item| process_item(site, item, config) }
+        end
+      end
+    end
+    
+    def self.process_item(site, item, config)
+      return unless item.data['docx'] || item.data['pdf']
+      
+      # Check if file was modified (incremental build)
+      return if skip_unchanged_file?(site, item, config)
+      
+      process_page(site, item, config)
+    end
+    
+    def self.skip_unchanged_file?(site, item, config)
+      return false unless config['incremental']
+      
+      source_file = item.respond_to?(:path) ? item.path : item.relative_path
+      return false unless File.exist?(source_file)
+      
+      filename = get_output_filename(item)
+      output_dir = get_output_directory(site, config)
+      
+      docx_file = File.join(output_dir, "#{filename}.docx")
+      pdf_file = File.join(output_dir, "#{filename}.pdf")
+      
+      source_mtime = File.mtime(source_file)
+      
+      if item.data['docx'] && File.exist?(docx_file)
+        return false if File.mtime(docx_file) < source_mtime
+      end
+      
+      if item.data['pdf'] && File.exist?(pdf_file)
+        return false if File.mtime(pdf_file) < source_mtime
+      end
+      
+      true
+    end
+    
+    def self.get_output_filename(item)
+      if item.respond_to?(:basename)
+        File.basename(item.basename, '.md')
+      else
+        File.basename(item.path, '.md')
+      end
+    end
+    
+    def self.get_output_directory(site, config)
+      if config['output_dir'].empty?
+        site.dest
+      else
+        output_path = File.join(site.dest, config['output_dir'])
+        FileUtils.mkdir_p(output_path) unless Dir.exist?(output_path)
+        output_path
+      end
+    end
+    
     def self.process_page(site, page, config)
       html_file = get_html_file_path(site, page)
       return unless File.exist?(html_file)
       
       html_content = File.read(html_file)
       processed_html = process_html_content(html_content, site, config)
-      filename = File.basename(page.path, '.md')
+      filename = get_output_filename(page)
+      output_dir = get_output_directory(site, config)
       generated_files = []
       
-      generate_docx(processed_html, filename, site, generated_files) if page.data['docx']
-      generate_pdf(processed_html, filename, site, generated_files, page, config) if page.data['pdf']
+      generate_docx(processed_html, filename, output_dir, site, generated_files) if page.data['docx']
+      generate_pdf(processed_html, filename, output_dir, site, generated_files, page, config) if page.data['pdf']
       
       if config['inject_downloads'] && generated_files.any?
         inject_download_links(html_content, generated_files, html_file, config)
@@ -64,10 +150,10 @@ module Jekyll
       processed
     end
     
-    def self.generate_docx(html_content, filename, site, generated_files)
+    def self.generate_docx(html_content, filename, output_dir, site, generated_files)
       begin
         docx_content = PandocRuby.convert(html_content, from: :html, to: :docx)
-        docx_file = File.join(site.dest, "#{filename}.docx")
+        docx_file = File.join(output_dir, "#{filename}.docx")
         
         File.open(docx_file, 'wb') { |file| file.write(docx_content) }
         
@@ -81,7 +167,7 @@ module Jekyll
       end
     end
     
-    def self.generate_pdf(html_content, filename, site, generated_files, page, config)
+    def self.generate_pdf(html_content, filename, output_dir, site, generated_files, page, config)
       begin
         pdf_html = html_content.dup
         
@@ -99,7 +185,7 @@ module Jekyll
         pdf_options = page.data['pdf_options'] || config['pdf_options']
         
         pdf_content = PandocRuby.new(pdf_html, from: :html, to: :pdf).convert(pdf_options)
-        pdf_file = File.join(site.dest, "#{filename}.pdf")
+        pdf_file = File.join(output_dir, "#{filename}.pdf")
         
         File.open(pdf_file, 'wb') { |file| file.write(pdf_content) }
         

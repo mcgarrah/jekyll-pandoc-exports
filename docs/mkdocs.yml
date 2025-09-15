@@ -1,0 +1,71 @@
+site_name: Jekyll Pandoc Exports
+site_description: Jekyll plugin to generate DOCX and PDF exports using Pandoc
+site_author: Michael McGarrah
+site_url: https://jekyll-pandoc-exports.readthedocs.io
+
+repo_name: mcgarrah/jekyll-pandoc-exports
+repo_url: https://github.com/mcgarrah/jekyll-pandoc-exports
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: blue
+      accent: blue
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: blue
+      accent: blue
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.highlight
+    - content.code.copy
+
+nav:
+  - Home: index.md
+  - Getting Started:
+    - Installation: installation.md
+    - Quick Start: quick-start.md
+    - Configuration: configuration.md
+  - Development:
+    - Testing: testing.md
+    - Release Process: release-process.md
+    - Release Flow: release-flow-diagram.md
+  - API Reference:
+    - Hooks System: hooks.md
+    - CLI Usage: cli.md
+  - Contributing:
+    - Development Setup: development.md
+    - Contributing Guide: ../CONTRIBUTING.md
+    - Roadmap: ../ROADMAP.md
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.tabbed:
+      alternate_style: true
+  - attr_list
+  - md_in_html
+  - toc:
+      permalink: true
+
+plugins:
+  - search
+  - mermaid2

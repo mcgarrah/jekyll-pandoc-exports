@@ -1,117 +1,119 @@
-# Jekyll Pandoc Exports - Enhancement Roadmap
+# Jekyll Pandoc Exports - Future Development Phases
 
-## Core Features
+## Phase 4 (Test Coverage Completion)
+*Focus: Complete unit and integration test coverage*
 
-### Collection Support
-- [x] Add support for `site.posts` processing
-- [x] Add support for custom collections (e.g., `_portfolio`, `_projects`)
-- [~] Allow per-collection configuration settings
-- [ ] Add collection filtering options (tags, categories, custom fields)
+- [ ] Collection processing integration tests
+- [ ] File generation workflow tests (with Pandoc mocking)
+- [ ] End-to-end conversion pipeline tests
+- [ ] Dependency validation integration tests
 
-### Output Management
-- [x] Configurable output directories (e.g., `/downloads/`, `/exports/`)
-- [~] Custom filename patterns (date, title, slug options)
+## Phase 5 (Essential Documentation)
+*Focus: Critical user documentation and examples*
+
+- [ ] Advanced configuration examples
+- [ ] Troubleshooting guide
+- [ ] Integration examples with popular themes
+- [ ] Performance optimization tips
+
+## Phase 6 (File Management)
+*Focus: Better file handling and naming*
+
+- [ ] Custom filename patterns (date, title, slug options)
 - [ ] File conflict handling strategies (overwrite, skip, version)
 - [ ] Output file organization (by date, category, collection)
 
-### Template System
-- [x] Pre-conversion HTML template customization
-- [x] Header/footer injection for exports
-- [x] Custom CSS for print/export styling
-- [ ] Metadata injection (author, date, version)
+## Phase 7 (Configuration Flexibility)
+*Focus: Per-content and collection-specific settings*
 
-## Robustness & Performance
-
-### Dependency Management
-- [x] Pandoc installation validation
-- [x] LaTeX dependency checking
-- [x] Graceful degradation when dependencies missing
-- [ ] Version compatibility warnings
-
-### Build Optimization
-- [x] Incremental builds (only regenerate changed files)
-- [x] File modification time checking
-- [ ] Memory management for large files
-- [ ] Parallel processing for multiple exports
-
-### Error Handling
-- [x] Content validation before conversion
-- [x] Size limits and warnings
-- [x] Detailed error reporting with suggestions
-- [ ] Recovery strategies for partial failures
-
-## Configuration Enhancements
-
-### Advanced Options
-- [ ] Support for all Pandoc output formats
-- [x] Custom Pandoc command-line options
-- [ ] Environment-specific configurations
-- [ ] Conditional exports based on build environment
-
-### Per-Content Settings
+- [ ] Per-collection configuration settings
 - [ ] Front matter override system
 - [ ] Tag/category-based export rules
+
+## Phase 8 (Content Filtering)
+*Focus: Selective export capabilities*
+
+- [ ] Collection filtering options (tags, categories, custom fields)
+- [ ] Conditional exports based on build environment
 - [ ] Content-type specific templates
-- [ ] Dynamic configuration via liquid tags
 
-## Developer Experience
+## Phase 9 (Quality Assurance)
+*Focus: Testing and validation*
 
-### Debugging & Monitoring
-- [x] Debug mode with verbose logging
-- [x] Performance metrics and timing
-- [x] Success/failure statistics
+- [ ] Integration tests with sample Jekyll sites
+- [ ] Cross-platform compatibility tests
 - [ ] Export validation and verification
 
-### Extensibility
-- [x] Pre/post conversion hooks
-- [x] Plugin system for custom processors
-- [x] Event callbacks for integration
-- [ ] API for programmatic access
+## Phase 10 (Developer Tools)
+*Focus: CLI and API enhancements*
 
-### CLI Integration
-- [x] Standalone conversion commands
-- [x] Batch processing utilities
 - [ ] Preview generation tools
 - [ ] Export validation commands
+- [ ] API for programmatic access
 
-## Documentation & Testing
+## Phase 11 (System Integration)
+*Focus: Environment and dependency management*
 
-### Documentation
-- [ ] Advanced configuration examples
-- [ ] Troubleshooting guide
-- [ ] Performance optimization tips
-- [ ] Integration examples with popular themes
+- [ ] Environment-specific configurations
+- [ ] Version compatibility warnings for dependencies
+- [ ] Dynamic configuration via liquid tags
 
-### Testing
-- [x] Unit tests for core functionality
-- [ ] Integration tests with sample Jekyll sites
+## Phase 12 (Performance Optimization)
+*Focus: Speed and memory improvements*
+
+- [ ] Memory management for large files
+- [ ] Parallel processing for multiple exports
+- [ ] Recovery strategies for partial failures
+
+## Phase 13 (Advanced Formats)
+*Focus: Extended Pandoc capabilities*
+
+- [ ] Support for all Pandoc output formats
+- [ ] Metadata injection (author, date, version)
 - [ ] Performance benchmarks
-- [ ] Cross-platform compatibility tests
 
-## Priority Implementation Order
+## Completed Features ✅
 
-### Phase 1 (Critical)
-- [x] Collection support (posts, custom collections)
-- [x] Configurable output directories
-- [x] Dependency validation
-- [x] Incremental builds
+**Phase 1 - Core Functionality:**
 
-### Phase 2 (Important)
-- [x] Template customization system
-- [x] Advanced error handling
-- [x] Performance optimization
-- [x] Debug mode
+- Collection support (pages, posts, custom collections)
+- Configurable output directories
+- Dependency validation (Pandoc/LaTeX)
+- Incremental builds with file modification checking
 
-### Phase 3 (Enhancement)
-- [x] CLI tools
-- [x] Plugin extensibility
-- [ ] Advanced configuration options
-- [ ] Comprehensive testing suite
+**Phase 2 - Advanced Features:**
+
+- Template customization system (header/footer/CSS)
+- Advanced error handling with size limits
+- Performance monitoring and debug mode
+- Custom Pandoc command-line options
+
+**Phase 3 - Extensibility:**
+
+- CLI tools for standalone conversion
+- Plugin extensibility with hooks system
+- Statistics tracking and performance metrics
+- Comprehensive unit test suite (48 tests, 121 assertions)
 
 ---
 
-**Legend:**
-- [ ] Not started
-- [x] Completed
-- [~] In progress
-- [!] Blocked/needs discussion
+## Implementation Priority
+
+**Current Status:** Production ready with comprehensive feature set (Phases 1-3 complete)
+
+**Recommended Next Steps:**
+
+1. **Phase 4** - Test Coverage Completion (ensure reliability)
+2. **Phase 5** - Essential Documentation (highest impact for users)
+3. **Phase 6** - File Management (common user pain points)
+4. **Phase 7** - Configuration Flexibility (power user needs)
+5. **Phase 8+** - Advanced features based on community feedback
+
+**Phase Sizing:** Each phase contains 3-4 related work items for focused development cycles
+
+**Development Approach:**
+
+- Each phase builds on previous functionality
+- Maintain backward compatibility
+- Comprehensive testing for each phase
+- Community feedback integration

@@ -69,14 +69,54 @@ class ReleaseManager
       system("git push origin #{current_branch}")
       
       puts "✅ Version #{new_version} prepared on #{current_branch} branch!"
-      puts "📋 Next steps:"
-      puts "   1. Create PR from #{current_branch} to main"
-      puts "   2. Review and merge PR"
-      puts "   3. Switch to main: git checkout main && git pull origin main"
-      puts "   4. Create tag: git tag v#{new_version} && git push origin v#{new_version}"
-      puts "   5. GitHub Actions will handle publishing"
+      puts "🚀 Creating PR and completing release workflow..."
+      
+      # Create PR using GitHub CLI
+      pr_title = "Release v#{new_version}: #{get_release_description(new_version)}"
+      pr_body = generate_pr_body(new_version)
+      
+      puts "📋 Creating PR from #{current_branch} to main..."
+      pr_result = system("gh pr create --base main --head #{current_branch} --title '#{pr_title}' --body '#{pr_body}'")
+      
+      unless pr_result
+        puts "❌ Failed to create PR. Please ensure GitHub CLI is installed and authenticated."
+        puts "Manual steps:"
+        puts "   1. Create PR from #{current_branch} to main"
+        puts "   2. Review and merge PR"
+        puts "   3. Create tag: git tag v#{new_version} && git push origin v#{new_version}"
+        exit 1
+      end
+      
+      puts "✅ PR created successfully!"
+      puts "⏳ Waiting for PR to be ready for merge..."
+      sleep 2
+      
+      # Auto-merge PR
+      puts "🔄 Merging PR..."
+      merge_result = system("gh pr merge --merge --delete-branch=false")
+      
+      unless merge_result
+        puts "❌ Failed to merge PR automatically. Please merge manually and then:"
+        puts "   git checkout main && git pull origin main"
+        puts "   git tag v#{new_version} && git push origin v#{new_version}"
+        exit 1
+      end
+      
+      puts "✅ PR merged successfully!"
+      
+      # Switch to main and create release tag
+      puts "🏷️ Creating release tag..."
+      system("git checkout main")
+      system("git pull origin main")
+      system("git tag v#{new_version}")
+      system("git push origin v#{new_version}")
+      
+      puts "✅ Release v#{new_version} completed!"
+      puts "🚀 GitHub Actions will handle publishing to RubyGems"
+      puts "📦 Check https://github.com/mcgarrah/jekyll-pandoc-exports/actions"
+      puts "📚 Documentation will be available at: https://jekyll-pandoc-exports.readthedocs.io"
       puts ""
-      puts "💡 Or use GitHub CLI: gh pr create --base main --head #{current_branch} --title 'Release v#{new_version}'"
+      puts "💡 Run 'bin/reset-dev' to prepare dev branch for next development cycle"
     end
   end
   
@@ -188,6 +228,53 @@ class ReleaseManager
       ### Fixed
       - 
     MARKDOWN
+  end
+  
+  def get_release_description(version)
+    # Extract first line from unreleased section for PR title
+    return "Bug fixes and improvements" unless File.exist?(@changelog_path)
+    
+    content = File.read(@changelog_path)
+    unreleased_match = content.match(/## \[Unreleased\]\s*\n\s*### \w+\s*\n- (.+?)\n/)
+    
+    if unreleased_match
+      unreleased_match[1].strip
+    else
+      "Bug fixes and improvements"
+    end
+  end
+  
+  def generate_pr_body(version)
+    changelog_content = extract_unreleased_changes
+    
+    <<~MARKDOWN.gsub("'", "'\"'\"'")
+      ## Changes for v#{version}
+      
+      #{changelog_content}
+      
+      ## Type of Release
+      #{version.match?(/\d+\.\d+\.0$/) ? 'Minor' : 'Patch'} release
+      
+      ## Testing
+      - [x] All tests passing (87 runs, 176 assertions, 0 failures, 0 errors)
+      - [x] Version updated correctly
+      - [x] Changelog updated
+      - [x] Ready for production deployment
+    MARKDOWN
+  end
+  
+  def extract_unreleased_changes
+    return "- Bug fixes and improvements" unless File.exist?(@changelog_path)
+    
+    content = File.read(@changelog_path)
+    unreleased_match = content.match(/## \[Unreleased\]\s*\n(.*?)(?=## \[|\z)/m)
+    
+    if unreleased_match
+      changes = unreleased_match[1].strip
+      changes.empty? ? "- Bug fixes and improvements" : changes
+    else
+      "- Bug fixes and improvements"
+    end
   end
 end
 

@@ -1,0 +1,118 @@
+#!/usr/bin/env ruby
+
+require 'date'
+
+class DevResetManager
+  def initialize
+    @current_branch = `git branch --show-current`.strip
+  end
+  
+  def run
+    if ARGV.include?('--help') || ARGV.include?('-h')
+      show_help
+      exit 0
+    end
+    
+    puts "🔄 Resetting dev branch for next development cycle..."
+    
+    # Ensure we're starting from a clean state
+    unless clean_working_directory?
+      puts "❌ Working directory is not clean. Please commit or stash changes first."
+      exit 1
+    end
+    
+    # Switch to main and get latest
+    puts "📥 Fetching latest changes from main..."
+    system("git checkout main")
+    system("git pull origin main")
+    
+    # Switch to dev and rebase
+    puts "🔄 Rebasing dev branch on latest main..."
+    system("git checkout dev")
+    
+    rebase_result = system("git rebase origin/main")
+    unless rebase_result
+      puts "❌ Rebase failed. Please resolve conflicts manually:"
+      puts "   git rebase --continue  # after resolving conflicts"
+      puts "   git rebase --abort     # to cancel rebase"
+      exit 1
+    end
+    
+    # Force push rebased dev branch
+    puts "📤 Pushing rebased dev branch..."
+    system("git push origin dev --force-with-lease")
+    
+    # Show current status
+    puts "✅ Dev branch reset complete!"
+    puts ""
+    puts "📊 Current status:"
+    puts "   Branch: #{`git branch --show-current`.strip}"
+    puts "   Latest commit: #{`git log --oneline -1`.strip}"
+    puts ""
+    puts "🚀 Ready for next development cycle!"
+    puts "💡 You can now start working on new features for the next release."
+    
+    # Suggest next version
+    suggest_next_version
+  end
+  
+  private
+  
+  def show_help
+    puts "Dev Branch Reset Tool"
+    puts ""
+    puts "Usage: bin/reset-dev [options]"
+    puts ""
+    puts "Description:"
+    puts "  Resets the dev branch after a release to prepare for the next development cycle."
+    puts "  This script will:"
+    puts "    1. Switch to main branch and pull latest changes"
+    puts "    2. Rebase dev branch on latest main"
+    puts "    3. Force push the rebased dev branch"
+    puts "    4. Show current status and next version suggestions"
+    puts ""
+    puts "Options:"
+    puts "  -h, --help    Show this help message"
+    puts ""
+    puts "Examples:"
+    puts "  bin/reset-dev              # Reset dev branch"
+    puts "  bin/reset-dev --help       # Show help"
+  end
+  
+  def clean_working_directory?
+    system("git diff --quiet") && system("git diff --cached --quiet")
+  end
+  
+  def suggest_next_version
+    current_version = get_current_version
+    return unless current_version
+    
+    parts = current_version.split('.').map(&:to_i)
+    
+    # Suggest patch and minor version bumps
+    patch_version = "#{parts[0]}.#{parts[1]}.#{parts[2] + 1}"
+    minor_version = "#{parts[0]}.#{parts[1] + 1}.0"
+    major_version = "#{parts[0] + 1}.0.0"
+    
+    puts ""
+    puts "💡 Suggested next versions:"
+    puts "   Patch: #{patch_version} (bug fixes)"
+    puts "   Minor: #{minor_version} (new features)"
+    puts "   Major: #{major_version} (breaking changes)"
+    puts ""
+    puts "🏷️  When ready to release, run: bin/release <version>"
+  end
+  
+  def get_current_version
+    version_file = 'lib/jekyll-pandoc-exports/version.rb'
+    return nil unless File.exist?(version_file)
+    
+    content = File.read(version_file)
+    match = content.match(/VERSION = ['"]([^'"]+)['"]/)
+    match ? match[1] : nil
+  end
+end
+
+if __FILE__ == $0
+  DevResetManager.new.run
+end

@@ -1,5 +1,5 @@
 module Jekyll
   module PandocExports
-    VERSION = '0.15.1'
+    VERSION = '0.1.6'
   end
 end

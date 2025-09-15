@@ -4,10 +4,18 @@ module Jekyll
   module PandocExports
     
     Jekyll::Hooks.register :site, :post_write do |site|
-      config = site.config['pandoc_exports'] || {}
+      config = setup_configuration(site)
+      return unless config['enabled']
       
-      # Set default configuration
-      config = {
+      site.pages.each do |page|
+        next unless page.data['docx'] || page.data['pdf']
+        process_page(site, page, config)
+      end
+    end
+    
+    def self.setup_configuration(site)
+      config = site.config['pandoc_exports'] || {}
+      {
         'enabled' => true,
         'pdf_options' => { 'variable' => 'geometry:margin=1in' },
         'unicode_cleanup' => true,
@@ -17,35 +25,22 @@ module Jekyll
         'title_cleanup' => [],
         'image_path_fixes' => []
       }.merge(config)
+    end
+    
+    def self.process_page(site, page, config)
+      html_file = get_html_file_path(site, page)
+      return unless File.exist?(html_file)
       
-      return unless config['enabled']
+      html_content = File.read(html_file)
+      processed_html = process_html_content(html_content, site, config)
+      filename = File.basename(page.path, '.md')
+      generated_files = []
       
-      site.pages.each do |page|
-        next unless page.data['docx'] || page.data['pdf']
-        
-        html_file = get_html_file_path(site, page)
-        next unless File.exist?(html_file)
-        
-        html_content = File.read(html_file)
-        processed_html = process_html_content(html_content, site, config)
-        filename = File.basename(page.path, '.md')
-        
-        generated_files = []
-        
-        # Generate DOCX if requested
-        if page.data['docx']
-          generate_docx(processed_html, filename, site, generated_files)
-        end
-        
-        # Generate PDF if requested
-        if page.data['pdf']
-          generate_pdf(processed_html, filename, site, generated_files, page, config)
-        end
-        
-        # Inject download links if enabled
-        if config['inject_downloads'] && generated_files.any?
-          inject_download_links(html_content, generated_files, html_file, config)
-        end
+      generate_docx(processed_html, filename, site, generated_files) if page.data['docx']
+      generate_pdf(processed_html, filename, site, generated_files, page, config) if page.data['pdf']
+      
+      if config['inject_downloads'] && generated_files.any?
+        inject_download_links(html_content, generated_files, html_file, config)
       end
     end
     
@@ -70,44 +65,52 @@ module Jekyll
     end
     
     def self.generate_docx(html_content, filename, site, generated_files)
-      docx_content = PandocRuby.convert(html_content, from: :html, to: :docx)
-      docx_file = File.join(site.dest, "#{filename}.docx")
-      
-      File.open(docx_file, 'wb') { |file| file.write(docx_content) }
-      
-      generated_files << { 
-        type: 'Word Document (.docx)', 
-        url: "#{site.baseurl}/#{filename}.docx" 
-      }
-      puts "Generated #{filename}.docx"
+      begin
+        docx_content = PandocRuby.convert(html_content, from: :html, to: :docx)
+        docx_file = File.join(site.dest, "#{filename}.docx")
+        
+        File.open(docx_file, 'wb') { |file| file.write(docx_content) }
+        
+        generated_files << { 
+          type: 'Word Document (.docx)', 
+          url: "#{site.baseurl}/#{filename}.docx" 
+        }
+        Jekyll.logger.info "Pandoc Exports:", "Generated #{filename}.docx"
+      rescue => e
+        Jekyll.logger.error "Pandoc Exports:", "Failed to generate #{filename}.docx: #{e.message}"
+      end
     end
     
     def self.generate_pdf(html_content, filename, site, generated_files, page, config)
-      pdf_html = html_content.dup
-      
-      # Apply Unicode cleanup if enabled
-      if config['unicode_cleanup']
-        pdf_html = clean_unicode_characters(pdf_html)
+      begin
+        pdf_html = html_content.dup
+        
+        # Apply Unicode cleanup if enabled
+        if config['unicode_cleanup']
+          pdf_html = clean_unicode_characters(pdf_html)
+        end
+        
+        # Apply title cleanup patterns from config
+        config['title_cleanup'].each do |pattern|
+          pdf_html.gsub!(Regexp.new(pattern), '')
+        end
+        
+        # Get PDF options from config or page front matter
+        pdf_options = page.data['pdf_options'] || config['pdf_options']
+        
+        pdf_content = PandocRuby.new(pdf_html, from: :html, to: :pdf).convert(pdf_options)
+        pdf_file = File.join(site.dest, "#{filename}.pdf")
+        
+        File.open(pdf_file, 'wb') { |file| file.write(pdf_content) }
+        
+        generated_files << { 
+          type: 'PDF Document (.pdf)', 
+          url: "#{site.baseurl}/#{filename}.pdf" 
+        }
+        Jekyll.logger.info "Pandoc Exports:", "Generated #{filename}.pdf"
+      rescue => e
+        Jekyll.logger.error "Pandoc Exports:", "Failed to generate #{filename}.pdf: #{e.message}"
       end
-      
-      # Apply title cleanup patterns from config
-      config['title_cleanup'].each do |pattern|
-        pdf_html.gsub!(Regexp.new(pattern), '')
-      end
-      
-      # Get PDF options from config or page front matter
-      pdf_options = page.data['pdf_options'] || config['pdf_options']
-      
-      pdf_content = PandocRuby.new(pdf_html, from: :html, to: :pdf).convert(pdf_options)
-      pdf_file = File.join(site.dest, "#{filename}.pdf")
-      
-      File.open(pdf_file, 'wb') { |file| file.write(pdf_content) }
-      
-      generated_files << { 
-        type: 'PDF Document (.pdf)', 
-        url: "#{site.baseurl}/#{filename}.pdf" 
-      }
-      puts "Generated #{filename}.pdf"
     end
     
     def self.clean_unicode_characters(html)

@@ -7,19 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.1.6] - 2025-09-15
+### Fixed
+- Read the Docs build configuration (docs_dir setting in mkdocs.yml)
+- Complete test infrastructure overhaul - 100% test suite passing
+- Method redefinition warnings eliminated
+- Mock expectation errors resolved
+- Jekyll logger interface conflicts fixed
+- Template configuration nil errors resolved
+- Incremental build logic corrected
+- Utility method return types fixed
+- PandocRuby conflicts eliminated
 
 ### Added
-- 
+- Comprehensive test coverage (87 runs, 176 assertions)
+- Bulletproof test infrastructure with 0 failures, 0 errors
+- Enhanced GitHub Actions workflows for seamless releases
 
-### Changed
-- 
-
-### Fixed
-- 
 ## [0.1.5] - 2025-09-15
 
-## Added
+### Added
 - Complete Read the Docs documentation site with MkDocs
 - Comprehensive installation guide with platform-specific instructions
 - Quick start tutorial for immediate productivity

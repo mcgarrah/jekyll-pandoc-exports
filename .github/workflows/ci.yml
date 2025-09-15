@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, dev ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        ruby-version: ['2.7', '3.0', '3.1', '3.2']
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Ruby ${{ matrix.ruby-version }}
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: ${{ matrix.ruby-version }}
+        bundler-cache: true
+    
+    - name: Install Pandoc
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y pandoc
+    
+    - name: Run tests
+      run: bundle exec rake test
+    
+    - name: Run RuboCop (if configured)
+      run: bundle exec rubocop || true
+      continue-on-error: true

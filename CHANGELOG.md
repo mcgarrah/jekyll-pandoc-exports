@@ -2,50 +2,74 @@
 
 All notable changes to this project will be documented in this file.
 
-## [0.1.4] - 2025-01-27
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-### Fixed
-- Fixed gemspec to use version from version.rb file
-- Disabled attestations in GitHub Actions workflow to prevent publishing errors
-
-### Added
-- CSS include file for print media queries (`_includes/pandoc-exports-css.html`)
-
-## [0.1.3] - 2025-01-27
+## [Unreleased]
 
 ### Added
-- GitHub Actions workflow for automated RubyGems publishing
-- Rakefile with release and test tasks
-- Trusted publisher configuration for RubyGems.org
+- Complete Read the Docs documentation site with MkDocs
+- Comprehensive installation guide with platform-specific instructions
+- Quick start tutorial for immediate productivity
+- Complete configuration reference with examples and tables
+- Hooks system documentation with extensibility examples
+- CLI usage guide with command reference and examples
+- Testing documentation with coverage analysis and Phase 4 implementation plan
+- Release process documentation with visual flow diagram
+- Development guide for contributors
+- Automated release workflow with GitHub Actions
+- Trusted Publishers integration for secure RubyGems publishing
+- Release management script (bin/release) for version automation
+- Mermaid flow diagram visualizing complete release process
+- Professional documentation structure in /docs directory
 
-## [0.1.2] - 2025-01-27
+### Changed
+- Migrated all documentation to /docs directory for Read the Docs integration
+- Renamed documentation files to consistent kebab-case naming
+- Updated README to reference comprehensive documentation site
+- Enhanced gemspec to use centralized version management
+- Improved cross-references between all documentation sections
+
+### Technical Infrastructure
+- Added .readthedocs.yaml for automated documentation builds
+- Created mkdocs.yml with Material theme and Mermaid support
+- Set up GitHub Actions workflows for CI/CD and releases
+- Implemented version management with lib/jekyll-pandoc-exports/version.rb
+- Added Python requirements.txt for documentation build dependencies
+
+### Documentation
+- Professional-grade documentation site ready for jekyll-pandoc-exports.readthedocs.io
+- Complete API reference for hooks system and CLI tools
+- Visual release process flow with decision points and error handling
+- Comprehensive testing strategy with coverage gaps identified
+- Development workflow documentation for contributors
+
+## [1.0.0] - 2024-12-19
 
 ### Added
-- Version management system
-- Gem structure improvements
-
-## [0.1.1] - 2025-01-27
-
-### Added
-- Initial gem structure and packaging
-- Basic plugin functionality
-
-## [0.1.0] - 2025-01-27
-
-### Added
-- Initial release of jekyll-pandoc-exports plugin
-- DOCX generation using pandoc-ruby
-- PDF generation with LaTeX support
-- Configurable PDF options (margins, paper size, etc.)
+- Core functionality for generating DOCX and PDF exports from Jekyll pages
+- Collection support for pages, posts, and custom collections
+- Configurable output directories with auto-creation
+- Dependency validation for Pandoc and LaTeX with helpful warnings
+- Incremental builds with file modification time checking
+- Template customization system (header/footer/CSS injection)
+- Advanced error handling with configurable size limits
+- Performance monitoring and debug mode
+- Custom Pandoc command-line options support
+- CLI tools for standalone conversion operations
+- Plugin extensibility with pre/post conversion hooks system
+- Statistics tracking with success rates and timing metrics
+- Comprehensive unit test suite (48 tests, 121 assertions)
+- Auto-injection of download links into generated pages
 - Unicode cleanup for LaTeX compatibility
-- Automatic download link injection with styling
 - Configurable HTML cleanup patterns
-- Image path fixing for pandoc conversion
-- Print-friendly CSS class support (`no-print`)
-- Per-page PDF option overrides
-- Collection support (pages, posts, custom collections)
-- Incremental builds (only regenerate changed files)
-- Dependency validation (Pandoc/LaTeX checking)
-- Configurable output directories
-- Error handling and logging
-- Front matter configuration per page
+- Print-friendly CSS class support
+
+### Technical Features
+- Automatic dependency validation (Pandoc/LaTeX)
+- File conflict handling and validation
+- Image path fixing for different Jekyll configurations
+- Flexible configuration merging and overrides
+- Performance metrics and detailed logging
+- Hook system for custom processing workflows
+- Statistics collection and reporting

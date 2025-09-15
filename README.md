@@ -272,6 +272,18 @@ gem push jekyll-pandoc-exports-1.0.0.gem
 - Check that Pandoc is installed and accessible
 - Verify file permissions in the `_site` directory
 
+## Documentation
+
+Complete documentation is available at: **[jekyll-pandoc-exports.readthedocs.io](https://jekyll-pandoc-exports.readthedocs.io)**
+
+- [Installation Guide](docs/installation.md)
+- [Quick Start Tutorial](docs/quick-start.md)
+- [Configuration Reference](docs/configuration.md)
+- [Hooks System](docs/hooks.md)
+- [CLI Usage](docs/cli.md)
+- [Testing Documentation](docs/testing.md)
+- [Release Process](docs/release-process.md)
+
 ## Contributing
 
 1. Fork the repository
@@ -279,6 +291,8 @@ gem push jekyll-pandoc-exports-1.0.0.gem
 3. Commit your changes (`git commit -am 'Add some feature'`)
 4. Push to the branch (`git push origin my-new-feature`)
 5. Create a new Pull Request
+
+See [Development Guide](docs/development.md) for detailed contribution instructions.
 
 ## License
 

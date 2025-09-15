@@ -15,9 +15,9 @@
 - [ ] Output file organization (by date, category, collection)
 
 ### Template System
-- [ ] Pre-conversion HTML template customization
-- [ ] Header/footer injection for exports
-- [ ] Custom CSS for print/export styling
+- [x] Pre-conversion HTML template customization
+- [x] Header/footer injection for exports
+- [x] Custom CSS for print/export styling
 - [ ] Metadata injection (author, date, version)
 
 ## Robustness & Performance
@@ -35,16 +35,16 @@
 - [ ] Parallel processing for multiple exports
 
 ### Error Handling
-- [ ] Content validation before conversion
-- [ ] Size limits and warnings
-- [ ] Detailed error reporting with suggestions
+- [x] Content validation before conversion
+- [x] Size limits and warnings
+- [x] Detailed error reporting with suggestions
 - [ ] Recovery strategies for partial failures
 
 ## Configuration Enhancements
 
 ### Advanced Options
 - [ ] Support for all Pandoc output formats
-- [ ] Custom Pandoc command-line options
+- [x] Custom Pandoc command-line options
 - [ ] Environment-specific configurations
 - [ ] Conditional exports based on build environment
 
@@ -57,8 +57,8 @@
 ## Developer Experience
 
 ### Debugging & Monitoring
-- [ ] Debug mode with verbose logging
-- [ ] Performance metrics and timing
+- [x] Debug mode with verbose logging
+- [x] Performance metrics and timing
 - [ ] Success/failure statistics
 - [ ] Export validation and verification
 
@@ -97,10 +97,10 @@
 - [x] Incremental builds
 
 ### Phase 2 (Important)
-- [ ] Template customization system
-- [ ] Advanced error handling
-- [ ] Performance optimization
-- [ ] Debug mode
+- [x] Template customization system
+- [x] Advanced error handling
+- [x] Performance optimization
+- [x] Debug mode
 
 ### Phase 3 (Enhancement)
 - [ ] CLI tools

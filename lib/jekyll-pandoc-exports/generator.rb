@@ -27,7 +27,17 @@ module Jekyll
         'download_class' => 'pandoc-downloads no-print',
         'download_style' => 'margin: 20px 0; padding: 15px; background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 5px;',
         'title_cleanup' => [],
-        'image_path_fixes' => []
+        'image_path_fixes' => [],
+        'debug' => false,
+        'max_file_size' => 10_000_000,
+        'strict_size_limit' => false,
+        'performance_monitoring' => false,
+        'template' => {
+          'header' => '',
+          'footer' => '',
+          'css' => ''
+        },
+        'pandoc_options' => {}
       }.merge(config)
     end
     
@@ -113,6 +123,8 @@ module Jekyll
     end
     
     def self.process_page(site, page, config)
+      start_time = Time.now if config['performance_monitoring']
+      
       html_file = get_html_file_path(site, page)
       return unless File.exist?(html_file)
       
@@ -122,11 +134,16 @@ module Jekyll
       output_dir = get_output_directory(site, config)
       generated_files = []
       
-      generate_docx(processed_html, filename, output_dir, site, generated_files) if page.data['docx']
+      generate_docx(processed_html, filename, output_dir, site, generated_files, config) if page.data['docx']
       generate_pdf(processed_html, filename, output_dir, site, generated_files, page, config) if page.data['pdf']
       
       if config['inject_downloads'] && generated_files.any?
         inject_download_links(html_content, generated_files, html_file, config)
+      end
+      
+      if config['performance_monitoring']
+        duration = Time.now - start_time
+        log_message(config, "Processed #{filename} in #{duration.round(3)}s")
       end
     end
     
@@ -142,6 +159,9 @@ module Jekyll
     def self.process_html_content(html_content, site, config)
       processed = html_content.dup
       
+      # Apply template customizations
+      processed = apply_template(processed, config)
+      
       # Apply image path fixes from config
       config['image_path_fixes'].each do |fix|
         processed.gsub!(Regexp.new(fix['pattern']), fix['replacement'].gsub('{{site.dest}}', site.dest))
@@ -150,7 +170,32 @@ module Jekyll
       processed
     end
     
-    def self.generate_docx(html_content, filename, output_dir, site, generated_files)
+    def self.apply_template(html_content, config)
+      template = config['template']
+      return html_content if template['header'].empty? && template['footer'].empty? && template['css'].empty?
+      
+      # Add custom CSS
+      if !template['css'].empty?
+        css_tag = "<style>#{template['css']}</style>"
+        html_content = html_content.sub(/<\/head>/, "#{css_tag}\n</head>")
+      end
+      
+      # Add header after body tag
+      if !template['header'].empty?
+        html_content = html_content.sub(/<body[^>]*>/, "\&\n#{template['header']}")
+      end
+      
+      # Add footer before closing body tag
+      if !template['footer'].empty?
+        html_content = html_content.sub(/<\/body>/, "#{template['footer']}\n</body>")
+      end
+      
+      html_content
+    end
+    
+    def self.generate_docx(html_content, filename, output_dir, site, generated_files, config = {})
+      return unless validate_content_size(html_content, config)
+      
       begin
         docx_content = PandocRuby.convert(html_content, from: :html, to: :docx)
         docx_file = File.join(output_dir, "#{filename}.docx")
@@ -161,13 +206,15 @@ module Jekyll
           type: 'Word Document (.docx)', 
           url: "#{site.baseurl}/#{filename}.docx" 
         }
-        Jekyll.logger.info "Pandoc Exports:", "Generated #{filename}.docx"
+        log_message(config, "Generated #{filename}.docx")
       rescue => e
-        Jekyll.logger.error "Pandoc Exports:", "Failed to generate #{filename}.docx: #{e.message}"
+        log_error(config, "Failed to generate #{filename}.docx: #{e.message}")
       end
     end
     
     def self.generate_pdf(html_content, filename, output_dir, site, generated_files, page, config)
+      return unless validate_content_size(html_content, config)
+      
       begin
         pdf_html = html_content.dup
         
@@ -184,7 +231,9 @@ module Jekyll
         # Get PDF options from config or page front matter
         pdf_options = page.data['pdf_options'] || config['pdf_options']
         
-        pdf_content = PandocRuby.new(pdf_html, from: :html, to: :pdf).convert(pdf_options)
+        # Merge custom pandoc options
+        all_options = pdf_options.merge(config['pandoc_options'])
+        pdf_content = PandocRuby.new(pdf_html, from: :html, to: :pdf).convert(all_options)
         pdf_file = File.join(output_dir, "#{filename}.pdf")
         
         File.open(pdf_file, 'wb') { |file| file.write(pdf_content) }
@@ -193,9 +242,9 @@ module Jekyll
           type: 'PDF Document (.pdf)', 
           url: "#{site.baseurl}/#{filename}.pdf" 
         }
-        Jekyll.logger.info "Pandoc Exports:", "Generated #{filename}.pdf"
+        log_message(config, "Generated #{filename}.pdf")
       rescue => e
-        Jekyll.logger.error "Pandoc Exports:", "Failed to generate #{filename}.pdf: #{e.message}"
+        log_error(config, "Failed to generate #{filename}.pdf: #{e.message}")
       end
     end
     
@@ -227,6 +276,29 @@ module Jekyll
       end
       
       download_html += "</ul></div>"
+    end
+    
+    def self.log_message(config, message)
+      if config['debug']
+        Jekyll.logger.info "Pandoc Exports [DEBUG]:", message
+      else
+        Jekyll.logger.info "Pandoc Exports:", message
+      end
+    end
+    
+    def self.log_error(config, message)
+      Jekyll.logger.error "Pandoc Exports:", message
+    end
+    
+    def self.validate_content_size(html_content, config)
+      max_size = config['max_file_size'] || 10_000_000 # 10MB default
+      
+      if html_content.bytesize > max_size
+        Jekyll.logger.warn "Pandoc Exports:", "Content size (#{html_content.bytesize} bytes) exceeds recommended limit (#{max_size} bytes)"
+        return false if config['strict_size_limit']
+      end
+      
+      true
     end
   end
 end

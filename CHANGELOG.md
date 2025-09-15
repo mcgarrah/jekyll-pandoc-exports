@@ -7,7 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.1] - 2025-09-15
+
+### Added
+- 
+
+### Changed
+- 
+
 ### Fixed
+- 
+## Fixed
 - Read the Docs build configuration (docs_dir setting in mkdocs.yml)
 - Complete test infrastructure overhaul - 100% test suite passing
 - Method redefinition warnings eliminated

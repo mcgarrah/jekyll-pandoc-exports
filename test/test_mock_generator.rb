@@ -76,6 +76,29 @@ class TestMockGenerator < Minitest::Test
     refute Jekyll::PandocExports.skip_unchanged_file?(site, item, config)
   end
   
+  def test_get_output_directory_custom
+    site = mock_site
+    config = { 'output_dir' => 'downloads' }
+    
+    dir = Jekyll::PandocExports.get_output_directory(site, config)
+    assert_equal '/tmp/site/downloads', dir
+  end
+  
+  def test_validate_content_size_within_limit
+    html_content = 'Small content'
+    config = { 'max_file_size' => 10_000_000 }
+    
+    assert Jekyll::PandocExports.validate_content_size(html_content, config)
+  end
+  
+  def test_validate_content_size_exceeds_limit
+    html_content = 'x' * 100  # 100 bytes
+    config = { 'max_file_size' => 50, 'strict_size_limit' => false }
+    
+    # Should return true but log warning (non-strict mode)
+    assert Jekyll::PandocExports.validate_content_size(html_content, config)
+  end
+  
   private
   
   def mock_site(config = {})

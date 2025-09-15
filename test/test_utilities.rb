@@ -1,42 +1,6 @@
 require 'minitest/autorun'
-
-# Tests for utility functions and HTML processing
-module Jekyll
-  module PandocExports
-    # Mock implementations for testing untested methods
-    def self.get_html_file_path(site, page)
-      if page.url.end_with?('/')
-        File.join(site.dest, page.url, 'index.html')
-      else
-        File.join(site.dest, "#{page.url.gsub('/', '')}.html")
-      end
-    end
-    
-    def self.build_download_html(generated_files, config)
-      download_html = "<div class=\"#{config['download_class']}\" style=\"#{config['download_style']}\">" +
-                     "<p><strong>Download Options:</strong></p>" +
-                     "<ul style=\"margin: 5px 0; padding-left: 20px;\">"
-      
-      generated_files.each do |file|
-        download_html += "<li><a href=\"#{file[:url]}\" style=\"color: #007bff; text-decoration: none; font-weight: bold;\">#{file[:type]}</a></li>"
-      end
-      
-      download_html += "</ul></div>"
-    end
-    
-    def self.inject_download_links(html_content, generated_files, html_file, config)
-      download_html = build_download_html(generated_files, config)
-      
-      if html_content.match(/<h[1-6][^>]*>/)
-        html_content.sub!(/<\/h[1-6]>/, "\\&\n#{download_html}")
-      else
-        html_content.sub!(/<body[^>]*>/, "\\&\n#{download_html}")
-      end
-      
-      html_content
-    end
-  end
-end
+require 'jekyll'
+require_relative '../lib/jekyll-pandoc-exports/generator'
 
 class TestUtilities < Minitest::Test
   def test_get_html_file_path_with_trailing_slash
@@ -89,6 +53,7 @@ class TestUtilities < Minitest::Test
     
     result = Jekyll::PandocExports.inject_download_links(html, generated_files, '/tmp/test.html', config)
     
+    assert_kind_of String, result
     assert_includes result, '</h1>'
     assert_includes result, 'Download Options'
   end
@@ -100,6 +65,7 @@ class TestUtilities < Minitest::Test
     
     result = Jekyll::PandocExports.inject_download_links(html, generated_files, '/tmp/test.html', config)
     
+    assert_kind_of String, result
     assert_includes result, '<body>'
     assert_includes result, 'Download Options'
   end

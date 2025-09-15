@@ -24,7 +24,8 @@ class TestIncremental < Minitest::Test
     item = mock_item_with_exports('/test.md')
     site = mock_site
     
-    File.stub :exist?, ->(path) { path.end_with?('test.md') } do
+    # Source exists but output files don't exist
+    File.stub :exist?, ->(path) { path.end_with?('test.md') && !path.end_with?('.docx') && !path.end_with?('.pdf') } do
       File.stub :mtime, Time.now do
         refute Jekyll::PandocExports.skip_unchanged_file?(site, item, config)
       end
@@ -70,17 +71,29 @@ class TestIncremental < Minitest::Test
   end
   
   def mock_item(path)
-    item = Minitest::Mock.new
-    item.expect :respond_to?, true, [:path]
-    item.expect :path, path
+    item = Object.new
+    def item.respond_to?(method)
+      method == :path
+    end
+    def item.path
+      @path
+    end
+    item.instance_variable_set(:@path, path)
     item
   end
   
   def mock_item_with_exports(path)
-    item = mock_item(path)
-    data = { 'docx' => true, 'pdf' => true }
-    item.expect :data, data
-    item.expect :data, data
+    item = Object.new
+    def item.respond_to?(method)
+      method == :path
+    end
+    def item.path
+      @path
+    end
+    def item.data
+      { 'docx' => true, 'pdf' => true }
+    end
+    item.instance_variable_set(:@path, path)
     item
   end
 end

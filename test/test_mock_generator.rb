@@ -4,13 +4,7 @@ require 'jekyll'
 # Load our plugin first
 require_relative '../lib/jekyll-pandoc-exports/generator'
 
-# Mock PandocRuby methods if needed
-if defined?(PandocRuby)
-  # Override existing methods for testing
-  PandocRuby.define_singleton_method(:convert) do |content, options = {}|
-    "mock_#{options[:to]}_content"
-  end
-end
+# PandocRuby is already loaded, no need to mock for these tests
 
 class TestMockGenerator < Minitest::Test
   def test_setup_configuration_defaults

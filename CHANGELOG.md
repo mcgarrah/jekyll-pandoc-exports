@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.1.9] - 2025-09-15
+## [0.1.10] - 2025-09-15
 
 ### Added
 - 
@@ -17,6 +17,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - 
+## Fixed
+- CI workflow bundler-cache conflicts resolved
+- Gemfile.lock properly updated and included in releases
+- Release script now handles dependency updates correctly
+- Eliminated frozen lockfile errors in GitHub Actions
+
+### Changed
+- CI workflow optimized with manual dependency installation
+- Release process now includes proper Gemfile.lock management
+- Enhanced reliability of automated release workflows
+
+## [0.1.9] - 2025-09-15
+
+### Added
+- Automated release workflow testing
+
+### Fixed
+- Initial Gemfile.lock handling improvements
+
 ## [0.1.8] - 2025-09-15
 
 ### Added

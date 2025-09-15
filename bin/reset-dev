@@ -1,86 +1,54 @@
 #!/usr/bin/env ruby
 
-require 'date'
-
 class DevResetManager
-  def initialize
-    @current_branch = `git branch --show-current`.strip
-  end
-  
   def run
     if ARGV.include?('--help') || ARGV.include?('-h')
       show_help
       exit 0
     end
     
-    puts "🔄 Resetting dev branch for next development cycle..."
+    puts "🔄 Hard resetting dev branch to match main..."
+    puts "⚠️  WARNING: This will discard ALL changes on dev branch!"
     
-    # Ensure we're starting from a clean state
-    unless clean_working_directory?
-      puts "❌ Working directory is not clean. Please commit or stash changes first."
-      exit 1
-    end
-    
-    # Switch to main and get latest
-    puts "📥 Fetching latest changes from main..."
-    system("git checkout main")
+    # Execute the exact commands requested
+    puts "📥 Pulling latest main..."
     system("git pull origin main")
     
-    # Switch to dev and rebase
-    puts "🔄 Rebasing dev branch on latest main..."
+    puts "🔄 Switching to dev branch..."
     system("git checkout dev")
     
-    rebase_result = system("git rebase origin/main")
-    unless rebase_result
-      puts "❌ Rebase failed. Please resolve conflicts manually:"
-      puts "   git rebase --continue  # after resolving conflicts"
-      puts "   git rebase --abort     # to cancel rebase"
-      exit 1
-    end
+    puts "💥 Hard resetting dev to main..."
+    system("git reset --hard main")
     
-    # Force push rebased dev branch
-    puts "📤 Pushing rebased dev branch..."
-    system("git push origin dev --force-with-lease")
+    puts "📤 Force pushing dev branch..."
+    system("git push origin dev --force")
     
-    # Show current status
-    puts "✅ Dev branch reset complete!"
-    puts ""
-    puts "📊 Current status:"
-    puts "   Branch: #{`git branch --show-current`.strip}"
-    puts "   Latest commit: #{`git log --oneline -1`.strip}"
-    puts ""
+    puts "✅ Dev branch hard reset complete!"
+    puts "📊 Dev branch is now identical to main branch"
     puts "🚀 Ready for next development cycle!"
-    puts "💡 You can now start working on new features for the next release."
     
-    # Suggest next version
     suggest_next_version
   end
   
   private
   
   def show_help
-    puts "Dev Branch Reset Tool"
+    puts "Dev Branch Hard Reset Tool"
     puts ""
     puts "Usage: bin/reset-dev [options]"
     puts ""
     puts "Description:"
-    puts "  Resets the dev branch after a release to prepare for the next development cycle."
-    puts "  This script will:"
-    puts "    1. Switch to main branch and pull latest changes"
-    puts "    2. Rebase dev branch on latest main"
-    puts "    3. Force push the rebased dev branch"
-    puts "    4. Show current status and next version suggestions"
+    puts "  Hard resets the dev branch to match main branch exactly."
+    puts "  ⚠️  WARNING: This DESTROYS all changes on dev branch!"
+    puts ""
+    puts "  This script executes:"
+    puts "    git pull origin main"
+    puts "    git checkout dev"
+    puts "    git reset --hard main"
+    puts "    git push origin dev --force"
     puts ""
     puts "Options:"
     puts "  -h, --help    Show this help message"
-    puts ""
-    puts "Examples:"
-    puts "  bin/reset-dev              # Reset dev branch"
-    puts "  bin/reset-dev --help       # Show help"
-  end
-  
-  def clean_working_directory?
-    system("git diff --quiet") && system("git diff --cached --quiet")
   end
   
   def suggest_next_version
@@ -88,19 +56,15 @@ class DevResetManager
     return unless current_version
     
     parts = current_version.split('.').map(&:to_i)
-    
-    # Suggest patch and minor version bumps
     patch_version = "#{parts[0]}.#{parts[1]}.#{parts[2] + 1}"
     minor_version = "#{parts[0]}.#{parts[1] + 1}.0"
-    major_version = "#{parts[0] + 1}.0.0"
     
     puts ""
-    puts "💡 Suggested next versions:"
+    puts "💡 Next versions:"
     puts "   Patch: #{patch_version} (bug fixes)"
     puts "   Minor: #{minor_version} (new features)"
-    puts "   Major: #{major_version} (breaking changes)"
     puts ""
-    puts "🏷️  When ready to release, run: bin/release <version>"
+    puts "🏷️  When ready: bin/release <version>"
   end
   
   def get_current_version

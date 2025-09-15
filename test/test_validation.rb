@@ -1,19 +1,6 @@
 require 'minitest/autorun'
-
-# Load validation functionality for testing
-module Jekyll
-  module PandocExports
-    def self.validate_content_size(html_content, config)
-      max_size = config['max_file_size'] || 10_000_000 # 10MB default
-      
-      if html_content.bytesize > max_size
-        return false if config['strict_size_limit']
-      end
-      
-      true
-    end
-  end
-end
+require 'jekyll'
+require_relative '../lib/jekyll-pandoc-exports/generator'
 
 class TestValidation < Minitest::Test
   def test_validate_content_size_within_limit

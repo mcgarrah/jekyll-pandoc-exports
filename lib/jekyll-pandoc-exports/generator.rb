@@ -97,6 +97,16 @@ module Jekyll
       
       source_mtime = File.mtime(source_file)
       
+      # Check if any required output files are missing
+      if item.data['docx'] && !File.exist?(docx_file)
+        return false
+      end
+      
+      if item.data['pdf'] && !File.exist?(pdf_file)
+        return false
+      end
+      
+      # Check if any existing output files are older than source
       if item.data['docx'] && File.exist?(docx_file)
         return false if File.mtime(docx_file) < source_mtime
       end
@@ -282,6 +292,7 @@ module Jekyll
       end
       
       File.write(html_file, html_content)
+      html_content
     end
     
     def self.build_download_html(generated_files, config)

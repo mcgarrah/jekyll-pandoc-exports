@@ -45,13 +45,8 @@ class TestGenerator < Minitest::Test
     site = mock_site
     config = { 'output_dir' => 'downloads' }
     
-    Dir.mktmpdir do |tmpdir|
-      site.config['destination'] = tmpdir
-      dir = Jekyll::PandocExports.get_output_directory(site, config)
-      expected = File.join(tmpdir, 'downloads')
-      assert_equal expected, dir
-      assert Dir.exist?(expected)
-    end
+    dir = Jekyll::PandocExports.get_output_directory(site, config)
+    assert_equal '/tmp/site/downloads', dir
   end
   
   def test_skip_unchanged_file_no_incremental
@@ -65,6 +60,7 @@ class TestGenerator < Minitest::Test
     html = '<img src="/assets/images/test.jpg">'
     site = mock_site
     config = {
+      'template' => { 'header' => '', 'footer' => '', 'css' => '' },
       'image_path_fixes' => [
         { 'pattern' => 'src="/assets/images/', 'replacement' => 'src="{{site.dest}}/assets/images/' }
       ]

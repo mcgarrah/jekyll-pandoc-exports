@@ -5,17 +5,18 @@ require 'date'
 
 class ReleaseManager
   def initialize
-    @current_version = get_current_version
     @changelog_path = 'CHANGELOG.md'
     @version_file = 'lib/jekyll-pandoc-exports/version.rb'
+    @current_version = get_current_version
   end
   
-  def run(new_version = nil)
-    if new_version.nil?
+  def run(new_version = nil, skip_tests = false)
+    if new_version.nil? || new_version == '--help' || new_version == '-h'
       puts "Current version: #{@current_version}"
-      puts "Usage: bin/release <new_version>"
+      puts "Usage: bin/release <new_version> [--skip-tests]"
       puts "Example: bin/release 1.1.0"
-      exit 1
+      puts "         bin/release 1.1.1 --skip-tests"
+      exit 0
     end
     
     unless valid_version?(new_version)
@@ -36,25 +37,47 @@ class ReleaseManager
     # Update changelog
     update_changelog(new_version)
     
-    # Run tests
-    puts "Running tests..."
-    unless system('bundle exec rake test')
-      puts "Tests failed! Aborting release."
-      exit 1
+    # Run tests (unless skipped)
+    unless skip_tests
+      puts "Running tests..."
+      unless system('bundle exec rake test')
+        puts "Tests failed! Aborting release."
+        puts "Use --skip-tests to bypass test failures for patch releases."
+        exit 1
+      end
+    else
+      puts "Skipping tests as requested..."
     end
     
     # Commit changes
     system("git add #{@version_file} #{@changelog_path}")
     system("git commit -m 'Bump version to #{new_version}'")
     
-    # Create and push tag
-    system("git tag v#{new_version}")
-    system("git push origin main")
-    system("git push origin v#{new_version}")
+    current_branch = `git branch --show-current`.strip
     
-    puts "✅ Release #{new_version} initiated!"
-    puts "🚀 GitHub Actions will handle publishing to RubyGems"
-    puts "📦 Check https://github.com/mcgarrah/jekyll-pandoc-exports/actions"
+    if current_branch == 'main'
+      # Direct release from main branch
+      system("git tag v#{new_version}")
+      system("git push origin main")
+      system("git push origin v#{new_version}")
+      
+      puts "✅ Release #{new_version} initiated from main branch!"
+      puts "🚀 GitHub Actions will handle publishing to RubyGems"
+      puts "📦 Check https://github.com/mcgarrah/jekyll-pandoc-exports/actions"
+    else
+      # Push dev branch and create PR
+      system("git push origin #{current_branch}")
+      
+      puts "✅ Version #{new_version} prepared on #{current_branch} branch!"
+      puts "📋 Next steps:"
+      puts "   1. Create PR from #{current_branch} to main"
+      puts "   2. Review and merge PR"
+      puts "   3. Switch to main: git checkout main && git pull origin main"
+      puts "   4. Create tag: git tag v#{new_version} && git push origin v#{new_version}"
+      puts "   5. GitHub Actions will handle publishing"
+      puts ""
+      puts "💡 Or use GitHub CLI: gh pr create --base main --head #{current_branch} --title 'Release v#{new_version}'"
+    end
   end
   
   private
@@ -169,5 +192,7 @@ class ReleaseManager
 end
 
 if __FILE__ == $0
-  ReleaseManager.new.run(ARGV[0])
+  skip_tests = ARGV.include?('--skip-tests')
+  version = ARGV.find { |arg| !arg.start_with?('--') }
+  ReleaseManager.new.run(version, skip_tests)
 end

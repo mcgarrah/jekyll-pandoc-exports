@@ -1,30 +1,10 @@
 require 'minitest/autorun'
-
-# Mock PandocRuby for testing without dependency
-module PandocRuby
-  def self.convert(content, options = {})
-    "mock_#{options[:to]}_content"
-  end
-  
-  def self.new(content, options = {})
-    MockPandoc.new(content, options)
-  end
-  
-  class MockPandoc
-    def initialize(content, options)
-      @content = content
-      @options = options
-    end
-    
-    def convert(extra_options = {})
-      "mock_converted_content"
-    end
-  end
-end
-
-# Load Jekyll and our plugin
 require 'jekyll'
+
+# Load our plugin first
 require_relative '../lib/jekyll-pandoc-exports/generator'
+
+# PandocRuby is already loaded, no need to mock for these tests
 
 class TestMockGenerator < Minitest::Test
   def test_setup_configuration_defaults
@@ -72,6 +52,7 @@ class TestMockGenerator < Minitest::Test
     html = '<img src="/assets/images/test.jpg">'
     site = mock_site
     config = {
+      'template' => { 'header' => '', 'footer' => '', 'css' => '' },
       'image_path_fixes' => [
         { 'pattern' => 'src="/assets/images/', 'replacement' => 'src="{{site.dest}}/assets/images/' }
       ]
@@ -87,6 +68,29 @@ class TestMockGenerator < Minitest::Test
     site = mock_site
     
     refute Jekyll::PandocExports.skip_unchanged_file?(site, item, config)
+  end
+  
+  def test_get_output_directory_custom
+    site = mock_site
+    config = { 'output_dir' => 'downloads' }
+    
+    dir = Jekyll::PandocExports.get_output_directory(site, config)
+    assert_equal '/tmp/site/downloads', dir
+  end
+  
+  def test_validate_content_size_within_limit
+    html_content = 'Small content'
+    config = { 'max_file_size' => 10_000_000 }
+    
+    assert Jekyll::PandocExports.validate_content_size(html_content, config)
+  end
+  
+  def test_validate_content_size_exceeds_limit
+    html_content = 'x' * 100  # 100 bytes
+    config = { 'max_file_size' => 50, 'strict_size_limit' => false }
+    
+    # Should return true but log warning (non-strict mode)
+    assert Jekyll::PandocExports.validate_content_size(html_content, config)
   end
   
   private

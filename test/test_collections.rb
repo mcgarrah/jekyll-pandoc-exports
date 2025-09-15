@@ -88,16 +88,18 @@ class TestCollections < Minitest::Test
   end
   
   def mock_item_without_exports
-    item = Minitest::Mock.new
-    data = {}
-    item.expect :data, data
+    item = Object.new
+    def item.data
+      {}
+    end
     item
   end
   
   def mock_item_with_exports
-    item = Minitest::Mock.new
-    data = { 'docx' => true, 'pdf' => true }
-    item.expect :data, data
+    item = Object.new
+    def item.data
+      { 'docx' => true, 'pdf' => true }
+    end
     item
   end
 end

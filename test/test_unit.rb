@@ -1,85 +1,12 @@
 require 'minitest/autorun'
 require 'jekyll'
+require_relative '../lib/jekyll-pandoc-exports/generator'
 
-# Mock PandocRuby before loading our code
-module PandocRuby
-  def self.convert(content, options = {})
-    "mock_#{options[:to]}_content"
-  end
-end
-
-# Load only the specific methods we want to test
-module Jekyll
-  module PandocExports
-    def self.setup_configuration(site)
-      config = site.config['pandoc_exports'] || {}
-      {
-        'enabled' => true,
-        'output_dir' => '',
-        'collections' => ['pages', 'posts'],
-        'pdf_options' => { 'variable' => 'geometry:margin=1in' },
-        'unicode_cleanup' => true,
-        'inject_downloads' => true,
-        'download_class' => 'pandoc-downloads no-print',
-        'download_style' => 'margin: 20px 0; padding: 15px; background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 5px;',
-        'title_cleanup' => [],
-        'image_path_fixes' => []
-      }.merge(config)
-    end
-    
-    def self.get_output_filename(item)
-      if item.respond_to?(:basename)
-        File.basename(item.basename, '.md')
-      else
-        File.basename(item.path, '.md')
-      end
-    end
-    
-    def self.get_output_directory(site, config)
-      if config['output_dir'].empty?
-        site.dest
-      else
-        output_path = File.join(site.dest, config['output_dir'])
-        FileUtils.mkdir_p(output_path) unless Dir.exist?(output_path)
-        output_path
-      end
-    end
-    
-    def self.clean_unicode_characters(html)
-      html.gsub(/[\u{1F000}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/, '')
-    end
-    
-    def self.process_html_content(html_content, site, config)
-      processed = html_content.dup
-      config['image_path_fixes'].each do |fix|
-        processed.gsub!(Regexp.new(fix['pattern']), fix['replacement'].gsub('{{site.dest}}', site.dest))
-      end
-      processed
-    end
-    
-    def self.skip_unchanged_file?(site, item, config)
-      return false unless config['incremental']
-      
-      source_file = item.respond_to?(:path) ? item.path : item.relative_path
-      return false unless File.exist?(source_file)
-      
-      filename = get_output_filename(item)
-      output_dir = get_output_directory(site, config)
-      
-      docx_file = File.join(output_dir, "#{filename}.docx")
-      pdf_file = File.join(output_dir, "#{filename}.pdf")
-      
-      source_mtime = File.mtime(source_file)
-      
-      if item.data['docx'] && File.exist?(docx_file)
-        return false if File.mtime(docx_file) < source_mtime
-      end
-      
-      if item.data['pdf'] && File.exist?(pdf_file)
-        return false if File.mtime(pdf_file) < source_mtime
-      end
-      
-      true
+# Mock PandocRuby if not already defined
+unless defined?(PandocRuby)
+  module PandocRuby
+    def self.convert(content, options = {})
+      "mock_#{options[:to]}_content"
     end
   end
 end
@@ -104,6 +31,46 @@ class TestUnit < Minitest::Test
     assert_equal 'exports', config['output_dir']
   end
   
+  def test_setup_configuration_advanced_options
+    site = mock_site
+    config = Jekyll::PandocExports.setup_configuration(site)
+    
+    # Test advanced configuration defaults
+    assert_equal false, config['debug']
+    assert_equal 10_000_000, config['max_file_size']
+    assert_equal false, config['strict_size_limit']
+    assert_equal false, config['performance_monitoring']
+    assert_equal({}, config['pandoc_options'])
+    
+    # Test template defaults
+    template = config['template']
+    assert_equal '', template['header']
+    assert_equal '', template['footer']
+    assert_equal '', template['css']
+  end
+  
+  def test_setup_configuration_template_merge
+    site_config = {
+      'pandoc_exports' => {
+        'debug' => true,
+        'template' => {
+          'header' => '<div>Custom Header</div>',
+          'css' => 'body { margin: 0; }'
+        }
+      }
+    }
+    site = mock_site(site_config)
+    config = Jekyll::PandocExports.setup_configuration(site)
+    
+    assert_equal true, config['debug']
+    
+    template = config['template']
+    assert_equal '<div>Custom Header</div>', template['header']
+    assert_equal 'body { margin: 0; }', template['css']
+    # Footer should be empty string (default) when not specified
+    assert template['footer'].nil? || template['footer'] == '', "Expected footer to be nil or empty, got: #{template['footer'].inspect}"
+  end
+  
   def test_get_output_filename
     item = Struct.new(:path).new('/test-page.md')
     filename = Jekyll::PandocExports.get_output_filename(item)
@@ -120,6 +87,7 @@ class TestUnit < Minitest::Test
     html = '<img src="/assets/images/test.jpg">'
     site = mock_site
     config = {
+      'template' => { 'header' => '', 'footer' => '', 'css' => '' },
       'image_path_fixes' => [
         { 'pattern' => 'src="/assets/images/', 'replacement' => 'src="{{site.dest}}/assets/images/' }
       ]
@@ -129,12 +97,59 @@ class TestUnit < Minitest::Test
     assert_includes result, 'src="/tmp/site/assets/images/'
   end
   
+  def test_get_output_directory_default
+    site = mock_site
+    config = { 'output_dir' => '' }
+    
+    dir = Jekyll::PandocExports.get_output_directory(site, config)
+    assert_equal '/tmp/site', dir
+  end
+  
+  def test_get_output_directory_custom
+    site = mock_site
+    config = { 'output_dir' => 'downloads' }
+    
+    dir = Jekyll::PandocExports.get_output_directory(site, config)
+    assert_equal '/tmp/site/downloads', dir
+  end
+  
   def test_skip_unchanged_file_no_incremental
     config = { 'incremental' => false }
     item = Struct.new(:path).new('/test.md')
     site = mock_site
     
     refute Jekyll::PandocExports.skip_unchanged_file?(site, item, config)
+  end
+  
+  def test_skip_unchanged_file_incremental_no_source
+    config = { 'incremental' => true }
+    item = Struct.new(:path).new('/nonexistent.md')
+    site = mock_site
+    
+    refute Jekyll::PandocExports.skip_unchanged_file?(site, item, config)
+  end
+  
+  def test_validate_content_size_within_limit
+    html_content = 'Small content'
+    config = { 'max_file_size' => 10_000_000 }
+    
+    assert Jekyll::PandocExports.validate_content_size(html_content, config)
+  end
+  
+  def test_validate_content_size_exceeds_limit_non_strict
+    html_content = 'x' * 100  # 100 bytes
+    config = { 'max_file_size' => 50, 'strict_size_limit' => false }
+    
+    # Should return true but log warning (non-strict mode)
+    assert Jekyll::PandocExports.validate_content_size(html_content, config)
+  end
+  
+  def test_validate_content_size_exceeds_limit_strict
+    html_content = 'x' * 100  # 100 bytes
+    config = { 'max_file_size' => 50, 'strict_size_limit' => true }
+    
+    # Should return false in strict mode
+    refute Jekyll::PandocExports.validate_content_size(html_content, config)
   end
   
   private

@@ -1,32 +1,6 @@
 require 'minitest/autorun'
-
-# Load only the template functionality for testing
-module Jekyll
-  module PandocExports
-    def self.apply_template(html_content, config)
-      template = config['template']
-      return html_content if template['header'].empty? && template['footer'].empty? && template['css'].empty?
-      
-      # Add custom CSS
-      if !template['css'].empty?
-        css_tag = "<style>#{template['css']}</style>"
-        html_content = html_content.sub(/<\/head>/, "#{css_tag}\n</head>")
-      end
-      
-      # Add header after body tag
-      if !template['header'].empty?
-        html_content = html_content.sub(/<body[^>]*>/, "\\&\n#{template['header']}")
-      end
-      
-      # Add footer before closing body tag
-      if !template['footer'].empty?
-        html_content = html_content.sub(/<\/body>/, "#{template['footer']}\n</body>")
-      end
-      
-      html_content
-    end
-  end
-end
+require 'jekyll'
+require_relative '../lib/jekyll-pandoc-exports/generator'
 
 class TestTemplate < Minitest::Test
   def test_apply_template_empty_config

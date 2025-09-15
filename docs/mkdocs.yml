@@ -6,6 +6,8 @@ site_url: https://jekyll-pandoc-exports.readthedocs.io
 repo_name: mcgarrah/jekyll-pandoc-exports
 repo_url: https://github.com/mcgarrah/jekyll-pandoc-exports
 
+docs_dir: .
+
 theme:
   name: material
   palette:

@@ -3,6 +3,12 @@ name: Publish to RubyGems
 on:
   release:
     types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to publish'
+        required: true
+        type: string
 
 jobs:
   publish:

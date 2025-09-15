@@ -7,7 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.6] - 2025-09-15
+
 ### Added
+- 
+
+### Changed
+- 
+
+### Fixed
+- 
+## [0.1.5] - 2025-09-15
+
+## Added
 - Complete Read the Docs documentation site with MkDocs
 - Comprehensive installation guide with platform-specific instructions
 - Quick start tutorial for immediate productivity
@@ -44,7 +56,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Comprehensive testing strategy with coverage gaps identified
 - Development workflow documentation for contributors
 
-## [1.0.0] - 2024-12-19
+## [0.1.4] - 2025-09-11
 
 ### Added
 - Core functionality for generating DOCX and PDF exports from Jekyll pages

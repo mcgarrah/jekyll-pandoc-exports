@@ -1,11 +1,17 @@
 #!/usr/bin/env ruby
 
 class DevResetManager
+  # Configuration - change this for different projects
+  VERSION_FILE = 'lib/jekyll-pandoc-exports/version.rb'
+  
   def run
     if ARGV.include?('--help') || ARGV.include?('-h')
       show_help
       exit 0
     end
+    
+    # Validate environment before proceeding
+    validate_environment
     
     puts "🔄 Hard resetting dev branch to match main..."
     puts "⚠️  WARNING: This will discard ALL changes on dev branch!"
@@ -32,6 +38,34 @@ class DevResetManager
   
   private
   
+  def validate_environment
+    # Check if git command exists
+    unless system('which git > /dev/null 2>&1')
+      puts "❌ Error: Git command not found. Please install Git."
+      exit 1
+    end
+    
+    # Check if we're in a git repository
+    unless system('git rev-parse --git-dir > /dev/null 2>&1')
+      puts "❌ Error: Not in a Git repository. Please run from project root."
+      exit 1
+    end
+    
+    # Check if main branch exists
+    unless system('git show-ref --verify --quiet refs/heads/main')
+      puts "❌ Error: 'main' branch does not exist."
+      exit 1
+    end
+    
+    # Check if dev branch exists
+    unless system('git show-ref --verify --quiet refs/heads/dev')
+      puts "❌ Error: 'dev' branch does not exist."
+      exit 1
+    end
+    
+    puts "✅ Environment validation passed"
+  end
+  
   def show_help
     puts "Dev Branch Hard Reset Tool"
     puts ""
@@ -40,6 +74,11 @@ class DevResetManager
     puts "Description:"
     puts "  Hard resets the dev branch to match main branch exactly."
     puts "  ⚠️  WARNING: This DESTROYS all changes on dev branch!"
+    puts ""
+    puts "Requirements:"
+    puts "  - Git command available"
+    puts "  - Inside a Git repository"
+    puts "  - Both 'main' and 'dev' branches exist"
     puts ""
     puts "  This script executes:"
     puts "    git pull origin main"
@@ -68,10 +107,9 @@ class DevResetManager
   end
   
   def get_current_version
-    version_file = 'lib/jekyll-pandoc-exports/version.rb'
-    return nil unless File.exist?(version_file)
+    return nil unless File.exist?(VERSION_FILE)
     
-    content = File.read(version_file)
+    content = File.read(VERSION_FILE)
     match = content.match(/VERSION = ['"]([^'"]+)['"]/)
     match ? match[1] : nil
   end

@@ -7,11 +7,11 @@ module Jekyll
     
     Jekyll::Hooks.register :site, :post_write do |site|
       config = setup_configuration(site)
-      return unless config['enabled']
+      next unless config['enabled']
       
       unless validate_dependencies
         Jekyll.logger.error "Pandoc Exports:", "Missing required dependencies. Please install Pandoc and LaTeX."
-        return
+        next
       end
       
       @stats = Statistics.new

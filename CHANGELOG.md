@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.12] - 2025-06-14
+
+### Fixed
+- Jekyll 3.x compatibility: replaced `return` with `next` in hook block to fix `LocalJumpError` when used with `github-pages` gem (Jekyll 3.10.0)
+
 ## [0.1.11] - 2025-09-15
 
 ### Added
@@ -17,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - 
+
 ## [0.1.10] - 2025-09-15
 
 ### Added

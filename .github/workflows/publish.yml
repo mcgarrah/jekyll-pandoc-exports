@@ -3,6 +3,12 @@ name: Publish to RubyGems
 on:
   release:
     types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to publish'
+        required: true
+        type: string
 
 jobs:
   publish:
@@ -12,14 +18,19 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.tag || github.ref }}
       
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: '3.0'
+          ruby-version: '3.2'
           bundler-cache: true
       
       - name: Build and publish gem
         uses: rubygems/release-gem@v1
         with:
           attestations: false
+        env:
+          # Fallback to API key if trusted publishing fails
+          RUBYGEMS_API_KEY: ${{ secrets.RUBYGEMS_API_KEY }}

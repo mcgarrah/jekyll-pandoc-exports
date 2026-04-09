@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.14] - 2025-06-14
+
+### Fixed
+- `title_cleanup` patterns now apply to both PDF and DOCX exports (previously PDF only)
+- `title_cleanup` patterns now use multiline mode so `.*?` matches across newlines in multi-line HTML elements
+
 ## [0.1.13] - 2025-06-14
 
 ### Fixed

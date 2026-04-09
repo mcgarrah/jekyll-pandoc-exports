@@ -174,6 +174,11 @@ module Jekyll
       # Apply template customizations
       processed = apply_template(processed, config)
       
+      # Apply HTML cleanup patterns (removes unwanted elements before conversion)
+      (config['title_cleanup'] || []).each do |pattern|
+        processed.gsub!(Regexp.new(pattern, Regexp::MULTILINE), '')
+      end
+      
       # Apply image path fixes from config
       config['image_path_fixes'].each do |fix|
         processed.gsub!(Regexp.new(fix['pattern']), fix['replacement'].gsub('{{site.dest}}', site.dest))
@@ -250,9 +255,7 @@ module Jekyll
         end
         
         # Apply title cleanup patterns from config
-        config['title_cleanup'].each do |pattern|
-          pdf_html.gsub!(Regexp.new(pattern), '')
-        end
+        # (Note: also applied in process_html_content for both formats)
         
         # Get PDF options from config or page front matter
         pdf_options = page.data['pdf_options'] || config['pdf_options']

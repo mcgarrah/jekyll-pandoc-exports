@@ -183,23 +183,26 @@ module Jekyll
     end
     
     def self.apply_template(html_content, config)
-      template = config['template']
-      return html_content if template['header'].empty? && template['footer'].empty? && template['css'].empty?
+      template = config['template'] || {}
+      header = template['header'].to_s
+      footer = template['footer'].to_s
+      css = template['css'].to_s
+      return html_content if header.empty? && footer.empty? && css.empty?
       
       # Add custom CSS
-      if !template['css'].empty?
-        css_tag = "<style>#{template['css']}</style>"
+      unless css.empty?
+        css_tag = "<style>#{css}</style>"
         html_content = html_content.sub(/<\/head>/, "#{css_tag}\n</head>")
       end
       
       # Add header after body tag
-      if !template['header'].empty?
-        html_content = html_content.sub(/<body[^>]*>/, "\&\n#{template['header']}")
+      unless header.empty?
+        html_content = html_content.sub(/<body[^>]*>/, "\&\n#{header}")
       end
       
       # Add footer before closing body tag
-      if !template['footer'].empty?
-        html_content = html_content.sub(/<\/body>/, "#{template['footer']}\n</body>")
+      unless footer.empty?
+        html_content = html_content.sub(/<\/body>/, "#{footer}\n</body>")
       end
       
       html_content

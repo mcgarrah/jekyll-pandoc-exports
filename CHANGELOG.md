@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.13] - 2025-06-14
+
+### Fixed
+- Nil safety in template configuration: providing only `css` without `header` or `footer` no longer raises `NoMethodError` on nil
+
 ## [0.1.12] - 2025-06-14
 
 ### Fixed

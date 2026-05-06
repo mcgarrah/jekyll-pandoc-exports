@@ -17,6 +17,13 @@ A Jekyll plugin that automatically generates DOCX and PDF exports of your pages 
 
 ## Installation
 
+### Requirements
+
+- **Ruby** >= 3.2.0
+- **Jekyll** >= 4.3.2 (earlier versions crash on Ruby 3.2+ due to Liquid's removed `tainted?` method)
+- **Pandoc** (for document conversion)
+- **LaTeX** (for PDF generation)
+
 ### 1. Install Dependencies
 
 First, install Pandoc and LaTeX (for PDF generation):

@@ -1,10 +1,164 @@
-# CLI Usage
+# CLI & Command Usage
 
-The Jekyll Pandoc Exports plugin includes a command-line tool for standalone conversions and batch processing.
+Jekyll Pandoc Exports provides two ways to run exports from the command line:
 
-## Installation
+1. **`jekyll export`** — A Jekyll command that runs within your site's context (reads `_config.yml`, knows your collections). This is the recommended approach for Jekyll sites.
+2. **`jekyll-pandoc-exports`** — A standalone CLI tool for converting individual HTML files outside of Jekyll.
 
-The CLI tool is automatically available after gem installation:
+## Jekyll Export Command
+
+*Added in v0.2.0*
+
+The `jekyll export` command generates PDF and DOCX files from your built site without triggering a full `jekyll build`. It reads your `_config.yml` for `pandoc_exports` settings and processes pages that have `pdf: true` or `docx: true` in their front matter.
+
+### Prerequisites
+
+The site must be built first (`_site/` must exist):
+
+```bash
+bundle exec jekyll build
+bundle exec jekyll export
+```
+
+### Basic Usage
+
+```bash
+# Export all configured pages (both PDF and DOCX)
+bundle exec jekyll export
+
+# Export PDF only
+bundle exec jekyll export --format pdf
+
+# Export DOCX only
+bundle exec jekyll export --format docx
+```
+
+### Targeting Specific Pages
+
+```bash
+# Export only the print page
+bundle exec jekyll export --target print
+
+# Export only the about page
+bundle exec jekyll export --target about
+```
+
+### Dry Run Mode
+
+Print the exact Pandoc command that would be executed without actually running it. Invaluable for debugging LaTeX template issues:
+
+```bash
+bundle exec jekyll export --dry-run
+```
+
+Output shows:
+
+- The Pandoc command with all flags
+- Input size (bytes of processed HTML)
+- Output file path
+- Whether Unicode cleanup is enabled
+- How many `title_cleanup` patterns are applied
+
+### Schema Validation
+
+Validate your `_data/data.yml` structure before attempting export. Catches missing fields and malformed data early:
+
+```bash
+bundle exec jekyll export --validate
+```
+
+Validation checks:
+
+- Required top-level sections exist (`sidebar`, `career-profile`, `education`, `experiences`)
+- Required sidebar fields are present (`name`, `tagline`, `email`)
+- Experience entries have `role`, `company`, and `time`
+- Education entries have `degree` and `university`
+- YAML syntax is valid
+
+Combine with export:
+
+```bash
+bundle exec jekyll export --validate --format pdf
+```
+
+### Custom Output Directory
+
+```bash
+# Override the configured output directory
+bundle exec jekyll export --output ~/Downloads
+
+# Export to a specific path
+bundle exec jekyll export --output ./dist/exports
+```
+
+### All Options
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `--format FORMAT` | Output format: `pdf`, `docx`, `both` | `both` |
+| `--target TARGET` | Export specific page by filename | All configured pages |
+| `--dry-run` | Print Pandoc command without executing | `false` |
+| `--validate` | Validate `_data/data.yml` schema first | `false` |
+| `--output DIR` | Override output directory | From `_config.yml` |
+| `--source DIR` | Source directory | `.` |
+| `--config FILE` | Configuration file | `_config.yml` |
+
+### How It Works
+
+1. Reads `_config.yml` for `pandoc_exports` settings
+2. Scans source directory for `.html` files with `pdf: true` or `docx: true` front matter
+3. Locates the corresponding built HTML in `_site/`
+4. Applies `title_cleanup` patterns and `image_path_fixes` from config
+5. Applies template CSS injection
+6. Runs Pandoc conversion (PDF via LaTeX, DOCX directly)
+7. Writes output to the configured directory
+
+### Workflow Examples
+
+#### Fast iteration on PDF styling
+
+```bash
+# Build once
+bundle exec jekyll build
+
+# Iterate on export without rebuilding
+bundle exec jekyll export --format pdf --target print
+
+# Check what Pandoc sees
+bundle exec jekyll export --dry-run --target print
+```
+
+#### CI/CD integration
+
+```yaml
+# GitHub Actions
+- name: Build site
+  run: bundle exec jekyll build
+
+- name: Validate and export
+  run: bundle exec jekyll export --validate
+
+- name: Upload artifacts
+  uses: actions/upload-artifact@v4
+  with:
+    name: resume-exports
+    path: _site/downloads/
+```
+
+#### Pre-commit validation
+
+```bash
+# Validate data before committing
+bundle exec jekyll export --validate
+```
+
+---
+
+## Standalone CLI Tool
+
+The standalone CLI converts individual HTML files without requiring a Jekyll site context. Useful for one-off conversions or integration with external build systems.
+
+### Installation
 
 ```bash
 gem install jekyll-pandoc-exports
@@ -15,8 +169,6 @@ Or with Bundler:
 ```bash
 bundle exec jekyll-pandoc-exports --help
 ```
-
-## Basic Usage
 
 ### Convert Single File
 
@@ -46,12 +198,9 @@ jekyll-pandoc-exports --file page.html --output .
 ```bash
 # Process entire site (from Jekyll root)
 jekyll-pandoc-exports --source . --destination _site
-
-# Custom source and destination
-jekyll-pandoc-exports --source /path/to/jekyll --destination /path/to/output
 ```
 
-## Command Options
+### Standalone CLI Options
 
 | Option | Short | Description | Default |
 |--------|-------|-------------|---------|
@@ -63,21 +212,6 @@ jekyll-pandoc-exports --source /path/to/jekyll --destination /path/to/output
 | `--debug` | - | Enable verbose debug output | `false` |
 | `--help` | `-h` | Show help message | - |
 
-## Examples
-
-### Single File Conversion
-
-```bash
-# Basic conversion
-jekyll-pandoc-exports -f about.html
-
-# PDF with custom output
-jekyll-pandoc-exports -f about.html --format pdf -o ~/Downloads
-
-# Debug mode
-jekyll-pandoc-exports -f about.html --debug
-```
-
 ### Batch Processing
 
 ```bash
@@ -85,232 +219,48 @@ jekyll-pandoc-exports -f about.html --debug
 for file in *.html; do
   jekyll-pandoc-exports -f "$file" -o exports/
 done
-
-# Process specific files
-jekyll-pandoc-exports -f index.html -o dist/
-jekyll-pandoc-exports -f about.html -o dist/
-jekyll-pandoc-exports -f contact.html -o dist/
 ```
 
-### Jekyll Site Processing
+---
 
-```bash
-# Standard Jekyll site
-cd my-jekyll-site
-bundle exec jekyll build
-jekyll-pandoc-exports --source . --destination _site
+## When to Use Which
 
-# Custom configuration
-jekyll-pandoc-exports \
-  --source /var/www/jekyll \
-  --destination /var/www/html \
-  --debug
-```
-
-## Configuration
-
-The CLI tool uses a subset of plugin configuration options:
-
-```bash
-# These options are automatically configured:
-# - enabled: true
-# - debug: (from --debug flag)
-# - pdf_options: { variable: 'geometry:margin=1in' }
-# - unicode_cleanup: true
-```
-
-For advanced configuration, use the Jekyll plugin instead of the CLI tool.
-
-## Output
-
-### Success Output
-
-```bash
-$ jekyll-pandoc-exports -f page.html
-Conversion complete. Generated 2 file(s).
-```
-
-### Debug Output
-
-```bash
-$ jekyll-pandoc-exports -f page.html --debug
-Pandoc Exports [DEBUG]: Generated page.docx
-Pandoc Exports [DEBUG]: Generated page.pdf
-Conversion complete. Generated 2 file(s).
-```
-
-### Error Output
-
-```bash
-$ jekyll-pandoc-exports -f missing.html
-Error: File missing.html not found
-
-$ jekyll-pandoc-exports -f page.html --format invalid
-Error: Invalid format 'invalid'. Use: docx, pdf, both
-```
-
-## Integration Examples
-
-### Build Scripts
-
-```bash
-#!/bin/bash
-# build-with-exports.sh
-
-# Build Jekyll site
-bundle exec jekyll build
-
-# Generate exports for key pages
-jekyll-pandoc-exports -f _site/index.html -o _site/downloads/
-jekyll-pandoc-exports -f _site/about.html -o _site/downloads/
-jekyll-pandoc-exports -f _site/services.html -o _site/downloads/
-
-echo "Build complete with exports"
-```
-
-### CI/CD Integration
-
-```yaml
-# GitHub Actions example
-- name: Generate exports
-  run: |
-    bundle exec jekyll build
-    jekyll-pandoc-exports --source . --destination _site --debug
-```
-
-### Makefile Integration
-
-```makefile
-# Makefile
-.PHONY: build exports
-
-build:
-	bundle exec jekyll build
-
-exports: build
-	jekyll-pandoc-exports -f _site/documentation.html -o _site/downloads/
-	jekyll-pandoc-exports -f _site/api-reference.html -o _site/downloads/
-
-all: build exports
-```
-
-## Limitations
-
-The CLI tool has some limitations compared to the full Jekyll plugin:
-
-### Not Available in CLI
-- Collection processing
-- Front matter configuration
-- Template customization
-- Download link injection
-- Incremental builds
-- Jekyll-specific features
-
-### CLI-Specific Behavior
-- Uses default configuration values
-- Processes individual files only
-- No Jekyll context available
-- Limited error recovery
-
-## When to Use CLI vs Plugin
-
-### Use CLI Tool When:
-- Converting individual HTML files
-- Batch processing outside Jekyll
-- Integrating with external build systems
-- Quick one-off conversions
-- Testing Pandoc integration
-
-### Use Jekyll Plugin When:
-- Processing Jekyll collections
-- Need template customization
-- Want download link injection
-- Using Jekyll-specific features
-- Building complete Jekyll sites
+| Scenario | Use |
+|----------|-----|
+| Normal Jekyll site workflow | `jekyll export` |
+| Fast PDF/DOCX iteration without rebuild | `jekyll export` |
+| Validate data.yml before export | `jekyll export --validate` |
+| Debug Pandoc/LaTeX issues | `jekyll export --dry-run` |
+| Convert standalone HTML files | `jekyll-pandoc-exports` CLI |
+| External build system integration | `jekyll-pandoc-exports` CLI |
+| One-off file conversion | `jekyll-pandoc-exports` CLI |
 
 ## Troubleshooting
 
-### Command Not Found
+### "No export targets found"
+
+The `jekyll export` command requires:
+
+1. A built site (`bundle exec jekyll build` first)
+2. Pages with `pdf: true` or `docx: true` in front matter
+
+### "Site destination not found"
+
+Run `bundle exec jekyll build` before `bundle exec jekyll export`.
+
+### Pandoc errors
+
+Use `--dry-run` to see the exact command, then run it manually for detailed error output:
 
 ```bash
-# Verify installation
-gem list jekyll-pandoc-exports
-
-# Use bundle exec if needed
-bundle exec jekyll-pandoc-exports --help
-
-# Check PATH
-echo $PATH
+bundle exec jekyll export --dry-run
+# Copy the printed command and run it directly
 ```
 
-### Pandoc Errors
+### Schema validation failures
 
-```bash
-# Verify Pandoc installation
-pandoc --version
+Fix the reported issues in `_data/data.yml`. Common problems:
 
-# Install Pandoc if missing
-brew install pandoc  # macOS
-sudo apt-get install pandoc  # Ubuntu
-```
-
-### Permission Errors
-
-```bash
-# Check file permissions
-ls -la input.html
-
-# Check output directory permissions
-ls -ld output/
-
-# Create output directory if needed
-mkdir -p output/
-```
-
-### Large File Issues
-
-```bash
-# Use debug mode to see processing details
-jekyll-pandoc-exports -f large-file.html --debug
-
-# Check available memory
-free -h  # Linux
-vm_stat  # macOS
-```
-
-## Advanced Usage
-
-### Custom Pandoc Options
-
-The CLI tool uses standard Pandoc options. For custom options, create a wrapper script:
-
-```bash
-#!/bin/bash
-# custom-convert.sh
-
-# Set custom Pandoc options via environment
-export PANDOC_OPTIONS="--toc --number-sections"
-
-jekyll-pandoc-exports "$@"
-```
-
-### Parallel Processing
-
-```bash
-# Process multiple files in parallel
-find . -name "*.html" | xargs -P 4 -I {} jekyll-pandoc-exports -f {}
-```
-
-### Monitoring Progress
-
-```bash
-# Process with progress indication
-total=$(find . -name "*.html" | wc -l)
-count=0
-
-for file in *.html; do
-  count=$((count + 1))
-  echo "Processing $count/$total: $file"
-  jekyll-pandoc-exports -f "$file" -o exports/
-done
-```
+- Missing required fields (name, email, tagline)
+- Experience entries without role/company/time
+- YAML syntax errors (bad indentation, unclosed quotes)

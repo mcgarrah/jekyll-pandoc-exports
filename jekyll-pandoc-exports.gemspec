@@ -25,7 +25,7 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
   spec.executables   = ["jekyll-pandoc-exports"]
 
-  spec.required_ruby_version = ">= 3.0.0"
+  spec.required_ruby_version = ">= 3.2.0"
 
   spec.add_dependency "jekyll", ">= 3.0"
   spec.add_dependency "pandoc-ruby", "~> 2.1"

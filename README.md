@@ -193,7 +193,48 @@ When `inject_downloads` is enabled, the plugin automatically adds download links
 
 ## CLI Usage
 
-The plugin includes a command-line tool for standalone conversions:
+The plugin provides two command-line interfaces:
+
+### Jekyll Export Command (Recommended)
+
+*Added in v0.2.0* — Runs within your Jekyll site context, reads `_config.yml`:
+
+```bash
+# Build site first, then export without rebuilding
+bundle exec jekyll build
+bundle exec jekyll export
+
+# Export PDF only
+bundle exec jekyll export --format pdf
+
+# Export a specific page
+bundle exec jekyll export --target print
+
+# See what Pandoc would run (debug LaTeX issues)
+bundle exec jekyll export --dry-run
+
+# Validate _data/data.yml schema before export
+bundle exec jekyll export --validate
+
+# Custom output directory
+bundle exec jekyll export --output ~/Downloads
+```
+
+#### Export Command Options
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `--format FORMAT` | Output: `pdf`, `docx`, `both` | `both` |
+| `--target TARGET` | Export specific page by filename | All configured pages |
+| `--dry-run` | Print Pandoc command without executing | `false` |
+| `--validate` | Validate `_data/data.yml` schema first | `false` |
+| `--output DIR` | Override output directory | From `_config.yml` |
+| `--source DIR` | Source directory | `.` |
+| `--config FILE` | Configuration file | `_config.yml` |
+
+### Standalone CLI Tool
+
+For converting individual HTML files outside of Jekyll:
 
 ```bash
 # Convert single HTML file to both formats

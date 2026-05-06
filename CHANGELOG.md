@@ -21,6 +21,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Version bump to 0.2.0 (new feature: Jekyll Command integration)
+- Minimum Ruby version raised from 3.0 to 3.2 (3.0 and 3.1 are EOL)
+- CI matrix updated to Ruby 3.2, 3.3, 3.4 (dropped EOL 3.0, 3.1; added current 3.4)
 
 ## [0.1.14] - 2025-06-14
 

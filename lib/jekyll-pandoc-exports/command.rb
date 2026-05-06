@@ -39,6 +39,9 @@ module Jekyll
       end
 
       def run
+        # Ensure logger shows info-level output for CLI feedback
+        Jekyll.logger.adjust_verbosity(verbose: true)
+
         validate_format!
         validate_schema! if @validate
 
@@ -140,7 +143,7 @@ module Jekyll
 
         Jekyll.configuration({
           'source' => @source,
-          'quiet' => true
+          'quiet' => false
         })
       end
 
@@ -218,7 +221,7 @@ module Jekyll
       end
 
       def export_file(target, config, export_config)
-        filename = target[:filename]
+        filename = target[:front_matter]['export_filename'] || target[:filename]
         html_path = target[:html_path]
         front_matter = target[:front_matter]
 

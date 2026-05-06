@@ -119,6 +119,11 @@ module Jekyll
     end
     
     def self.get_output_filename(item)
+      # Support custom export filenames via front matter
+      if item.respond_to?(:data) && item.data['export_filename']
+        return item.data['export_filename']
+      end
+
       if item.respond_to?(:basename)
         File.basename(item.basename, '.md')
       else
@@ -230,7 +235,7 @@ module Jekyll
         
         generated_files << { 
           type: 'Word Document (.docx)', 
-          url: "#{site.baseurl}/#{filename}.docx" 
+          url: build_download_url(site, config, filename, 'docx')
         }
         @stats&.record_conversion_success(:docx)
         log_message(config, "Generated #{filename}.docx")
@@ -272,7 +277,7 @@ module Jekyll
         
         generated_files << { 
           type: 'PDF Document (.pdf)', 
-          url: "#{site.baseurl}/#{filename}.pdf" 
+          url: build_download_url(site, config, filename, 'pdf')
         }
         @stats&.record_conversion_success(:pdf)
         log_message(config, "Generated #{filename}.pdf")
@@ -318,6 +323,15 @@ module Jekyll
         Jekyll.logger.info "Pandoc Exports [DEBUG]:", message
       else
         Jekyll.logger.info "Pandoc Exports:", message
+      end
+    end
+
+    def self.build_download_url(site, config, filename, extension)
+      output_dir = config['output_dir'] || ''
+      if output_dir.empty?
+        "#{site.baseurl}/#{filename}.#{extension}"
+      else
+        "#{site.baseurl}/#{output_dir}/#{filename}.#{extension}"
       end
     end
     

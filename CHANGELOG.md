@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `--validate` flag: check `_data/data.yml` schema before export
 - `--output` flag: override the output directory
 - Pre-export YAML schema validation (checks required sections, fields, structure)
+- `export_filename` front matter support: custom output filenames (e.g., `McGarrah-Resume` instead of `print`)
+- `build_download_url` helper for correct download link generation with output_dir
 - Test suite for the export command (10 tests, 15 assertions)
 
 ### Changed

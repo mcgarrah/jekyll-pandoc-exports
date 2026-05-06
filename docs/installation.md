@@ -3,9 +3,33 @@
 ## System Requirements
 
 - **Ruby**: 3.2.0 or higher (tested on 3.2, 3.3, 3.4)
-- **Jekyll**: 3.0 or higher
+- **Jekyll**: 4.3.2 or higher
 - **Pandoc**: Required for document conversion
 - **LaTeX**: Required for PDF generation
+
+### Ruby and Jekyll Version Compatibility
+
+This plugin requires Ruby >= 3.2.0, which in turn constrains the minimum Jekyll version to **4.3.2**. Earlier Jekyll versions are incompatible with Ruby 3.2+ due to a breaking change in Ruby's standard library:
+
+| Jekyll Version | Works with Ruby 3.2+? | Reason |
+|---|---|---|
+| 3.x (all) | ❌ No | Depends on Liquid 4.x which calls `Object#tainted?` — removed in Ruby 3.2 |
+| 4.0.x – 4.2.x | ❌ No | Same Liquid 4.x `tainted?` runtime crash |
+| 4.3.0 – 4.3.1 | ❌ No | Liquid dependency not yet patched for Ruby 3.2 |
+| **4.3.2+** | ✅ Yes | First release with Liquid fix for `tainted?` removal |
+| **4.4.x** | ✅ Yes | Officially bumped minimum Ruby to 2.7; fully compatible |
+
+**Key detail:** Bundler will *allow* installing Jekyll 4.2 on Ruby 3.2 (the gemspec only requires Ruby >= 2.4), but `jekyll build` will crash at runtime with `undefined method 'tainted?' for an instance of String`. The failure comes from Liquid 4.x, not Jekyll itself.
+
+If you encounter this error, upgrade Jekyll:
+
+```bash
+# In your Gemfile, ensure:
+gem "jekyll", "~> 4.4"
+
+# Then:
+bundle update jekyll
+```
 
 ## Step 1: Install System Dependencies
 

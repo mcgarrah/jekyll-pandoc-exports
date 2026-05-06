@@ -4,58 +4,75 @@ require 'yaml'
 require 'date'
 require 'fileutils'
 
-# Minimal Jekyll mocks for isolated testing
-module Jekyll
-  class Logger
-    def info(topic, msg = nil); end
-    def warn(topic, msg = nil); end
-    def error(topic, msg = nil); end
-  end
+# Isolated test for the ExportRunner class.
+# We define minimal Jekyll stubs ONLY if Jekyll isn't already loaded
+# (i.e., when running this file standalone). When run via `bundle exec rake test`,
+# the real Jekyll is available and command.rb loads normally.
 
-  def self.logger
-    @logger ||= Logger.new
-  end
-
-  class Command
-    class << self
-      def init_with_program(prog); end
+unless defined?(Jekyll::Command)
+  module Jekyll
+    class Logger
+      def info(topic, msg = nil); end
+      def warn(topic, msg = nil); end
+      def error(topic, msg = nil); end
     end
-  end
 
-  def self.configuration(opts = {})
-    {
-      'source' => opts['source'] || '.',
-      'destination' => opts['destination'] || '_site',
-      'baseurl' => '',
-      'quiet' => true
-    }
-  end
+    def self.logger
+      @logger ||= Logger.new
+    end
 
-  module PandocExports
-    def self.setup_configuration(site)
-      config = site.config['pandoc_exports'] || {}
+    class Command
+      class << self
+        def init_with_program(prog); end
+      end
+    end
+
+    def self.configuration(opts = {})
       {
-        'enabled' => true,
-        'output_dir' => '',
-        'collections' => ['pages'],
-        'pdf_options' => { 'variable' => 'geometry:margin=1in' },
-        'unicode_cleanup' => true,
-        'title_cleanup' => [],
-        'image_path_fixes' => [],
-        'template' => { 'header' => '', 'footer' => '', 'css' => '' },
-        'pandoc_options' => {}
-      }.merge(config)
-    end
-
-    def self.validate_dependencies
-      true
+        'source' => opts['source'] || '.',
+        'destination' => opts['destination'] || '_site',
+        'baseurl' => '',
+        'quiet' => true
+      }
     end
   end
 end
 
-# Now load the command (Jekyll is already defined above)
-$LOADED_FEATURES << 'jekyll' # Prevent require 'jekyll' from failing
-load File.expand_path('../lib/jekyll-pandoc-exports/command.rb', __dir__)
+# Define PandocExports stubs only if not already loaded
+unless defined?(Jekyll::PandocExports::ExportRunner)
+  module Jekyll
+    module PandocExports
+      # Only define these if the real module hasn't loaded them
+      unless method_defined?(:setup_configuration)
+        def self.setup_configuration(site)
+          config = (site.respond_to?(:config) ? site.config : {})['pandoc_exports'] || {}
+          {
+            'enabled' => true,
+            'output_dir' => '',
+            'collections' => ['pages', 'posts'],
+            'pdf_options' => { 'variable' => 'geometry:margin=1in' },
+            'unicode_cleanup' => true,
+            'inject_downloads' => true,
+            'title_cleanup' => [],
+            'image_path_fixes' => [],
+            'template' => { 'header' => '', 'footer' => '', 'css' => '' },
+            'pandoc_options' => {},
+            'performance_monitoring' => false
+          }.merge(config)
+        end
+      end
+
+      unless method_defined?(:validate_dependencies)
+        def self.validate_dependencies
+          true
+        end
+      end
+    end
+  end
+
+  # Load the command file
+  require_relative '../lib/jekyll-pandoc-exports/command'
+end
 
 class TestExportRunner < Minitest::Test
   def setup
@@ -73,26 +90,19 @@ class TestExportRunner < Minitest::Test
   def test_validate_format_accepts_valid_formats
     %w[pdf docx both].each do |format|
       runner = build_runner('format' => format)
-      # Should not raise
       runner.send(:validate_format!)
     end
   end
 
   def test_validate_schema_passes_valid_data
     write_valid_data_yml
-
-    runner = build_runner('validate' => true, 'source' => @source)
-    # Redefine to capture instead of exit
-    # Just test the validation logic directly
     assert validate_data_yml_valid?
   end
 
   def test_validate_schema_catches_missing_sections
-    # Write data.yml missing required sections
     File.write(File.join(@source, '_data', 'data.yml'), YAML.dump({
       'sidebar' => { 'name' => 'Test', 'tagline' => 'Test', 'email' => 'test@test.com' }
     }))
-
     refute validate_data_yml_has_all_sections?
   end
 
@@ -103,14 +113,11 @@ class TestExportRunner < Minitest::Test
       'education' => { 'info' => [] },
       'experiences' => { 'info' => [] }
     }))
-
     refute validate_data_yml_sidebar_complete?
   end
 
   def test_find_export_targets_finds_pdf_pages
-    # Create a source HTML file with pdf front matter
     File.write(File.join(@source, 'print.html'), "---\nlayout: print\npdf: true\ndocx: true\n---\n<h1>Test</h1>")
-    # Create the built output
     File.write(File.join(@dest, 'print.html'), "<html><body><h1>Test</h1></body></html>")
 
     runner = build_runner('source' => @source)

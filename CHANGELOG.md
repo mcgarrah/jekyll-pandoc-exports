@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-05-06
+
+### Added
+- `jekyll export` command — generate PDF/DOCX without a full site build
+- `--format` flag: select `pdf`, `docx`, or `both` output
+- `--target` flag: export a specific page by filename
+- `--dry-run` flag: print the Pandoc command without executing
+- `--validate` flag: check `_data/data.yml` schema before export
+- `--output` flag: override the output directory
+- Pre-export YAML schema validation (checks required sections, fields, structure)
+- Test suite for the export command (10 tests, 15 assertions)
+
+### Changed
+- Version bump to 0.2.0 (new feature: Jekyll Command integration)
+
 ## [0.1.14] - 2025-06-14
 
 ### Fixed

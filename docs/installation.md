@@ -2,7 +2,7 @@
 
 ## System Requirements
 
-- **Ruby**: 2.6.0 or higher
+- **Ruby**: 3.2.0 or higher (tested on 3.2, 3.3, 3.4)
 - **Jekyll**: 3.0 or higher
 - **Pandoc**: Required for document conversion
 - **LaTeX**: Required for PDF generation

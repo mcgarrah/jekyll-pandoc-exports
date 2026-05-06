@@ -11,6 +11,9 @@ A Jekyll plugin that automatically generates DOCX and PDF exports of your pages 
 - **Template system**: Custom header/footer/CSS injection for branded exports
 - **Extensible**: Plugin hooks for custom processing workflows
 - **CLI tools**: Standalone conversion commands for batch processing
+- **Jekyll export command**: Generate exports without full site rebuild (`bundle exec jekyll export`)
+- **Dry run mode**: Debug Pandoc commands without executing
+- **Schema validation**: Validate data files before export
 - **Statistics**: Performance monitoring and success tracking
 
 ## Quick Start
@@ -76,6 +79,7 @@ The plugin generates files with the same name as your markdown file:
 - [Installation Guide](installation.md) - Detailed setup instructions
 - [Configuration](configuration.md) - Complete configuration options
 - [Quick Start](quick-start.md) - Step-by-step tutorial
+- [CLI & Export Command](cli.md) - Standalone export without full rebuild
 
 ## Production Ready
 

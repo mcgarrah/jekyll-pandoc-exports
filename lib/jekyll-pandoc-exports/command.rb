@@ -110,6 +110,35 @@ module Jekyll
               errors << "Experience ##{i + 1} missing 'role'" unless exp['role']
               errors << "Experience ##{i + 1} missing 'company'" unless exp['company']
               errors << "Experience ##{i + 1} missing 'time'" unless exp['time']
+
+              # Require at least one content field
+              has_summary = exp['summary'].is_a?(String) && !exp['summary'].strip.empty?
+              has_details = exp['details'].is_a?(String) && !exp['details'].strip.empty?
+              has_subsections = exp['subsections'].is_a?(Array) && !exp['subsections'].empty?
+
+              unless has_summary || has_details || has_subsections
+                errors << "Experience ##{i + 1} ('#{exp['role']}') must have at least one of: 'summary', 'details', or 'subsections'"
+              end
+
+              # Validate subsections structure if present
+              if exp['subsections']
+                unless exp['subsections'].is_a?(Array)
+                  errors << "Experience ##{i + 1} ('#{exp['role']}') 'subsections' must be an array"
+                else
+                  exp['subsections'].each_with_index do |sub, j|
+                    unless sub.is_a?(Hash)
+                      errors << "Experience ##{i + 1} ('#{exp['role']}') subsection ##{j + 1} must be an object"
+                      next
+                    end
+                    unless sub['title'].is_a?(String) && !sub['title'].strip.empty?
+                      errors << "Experience ##{i + 1} ('#{exp['role']}') subsection ##{j + 1} missing or invalid 'title' (must be a non-empty string)"
+                    end
+                    unless sub['text'].is_a?(String) && !sub['text'].strip.empty?
+                      errors << "Experience ##{i + 1} ('#{exp['role']}') subsection ##{j + 1} missing or invalid 'text' (must be a non-empty string)"
+                    end
+                  end
+                end
+              end
             end
           end
 

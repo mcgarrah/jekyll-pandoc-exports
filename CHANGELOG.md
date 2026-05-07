@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-05-07
+
+### Added
+- Schema validation now accepts `subsections` array field on experience entries
+- Validates each subsection object has `title` (string) and `text` (string)
+- Entries without `subsections`, `details`, or `summary` now report a validation error
+- 18 new unit tests for subsections schema validation (test/test_schema_subsections.rb)
+
+### Changed
+- Version bump to 0.2.1 (patch: backward-compatible validation enhancement)
+
 ## [0.2.0] - 2026-05-06
 
 ### Added

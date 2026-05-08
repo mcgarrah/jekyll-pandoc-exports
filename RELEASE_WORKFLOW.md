@@ -139,6 +139,45 @@ git tag v0.15.1 && git push origin v0.15.1
 - **Minor (0.15.1 → 0.16.0)**: New features, backwards compatible
 - **Major (0.15.1 → 1.0.0)**: Breaking changes
 
+## ⚠️ Known Pitfalls
+
+### Gemfile.lock Must Match Version (Critical)
+
+The CI publish workflow runs `bundle install` in **frozen/deployment mode**. If `Gemfile.lock` contains a different version than `version.rb`, the build fails with:
+
+```
+gemspecs for path gems changed, but the lockfile can't be updated because frozen mode is set
+```
+
+**The `bin/release` script handles this automatically**, but if you ever bump the version manually:
+
+1. Update `lib/jekyll-pandoc-exports/version.rb` with new version
+2. Run `bundle install` to regenerate `Gemfile.lock`
+3. Verify: `grep "jekyll-pandoc-exports" Gemfile.lock` — must show the new version
+4. Commit **both** files together
+
+### GitHub Release Required (Not Just a Tag)
+
+The `publish.yml` workflow triggers on a **GitHub Release event**, not a tag push alone. If you push a tag without creating a release, the gem won't publish to RubyGems.
+
+### Recovery from Failed Publish
+
+If the publish fails (usually due to Gemfile.lock mismatch):
+
+1. Fix the issue locally (run `bundle install`)
+2. Amend the commit: `git commit --amend --no-edit`
+3. Delete and recreate the tag: `git tag -d vX.Y.Z && git tag vX.Y.Z`
+4. Force push both: `git push --force origin main && git push --force origin vX.Y.Z`
+5. Delete the failed release: `gh release delete vX.Y.Z --yes`
+6. Create a new release: `gh release create vX.Y.Z --title "..." --notes "..."`
+
+### Past Failures (Institutional Memory)
+
+| Version | Date | Issue |
+|---------|------|-------|
+| v0.2.0 | 2026-05-06 | Missed creating the GitHub Release — tag existed but no release event to trigger publish.yml |
+| v0.2.1 | 2026-05-07 | Gemfile.lock not updated after version bump — CI failed in frozen mode |
+
 ## 🚨 Troubleshooting
 
 ### GitHub CLI Issues
